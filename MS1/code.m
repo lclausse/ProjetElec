@@ -41,7 +41,7 @@ scatter(xEst,yEst,'*')
 hold on;
 text(-8, 12, "MSE = " + err)
 hold on;
-scatter(xTag(1,:),xTag(2,:),'.')
+scatter(xTag(1,:),xTag(2,:),'k','.')
 legend('Récepteurs','Estimation','True pos')
 
 
