@@ -45,12 +45,13 @@ f4 =  @(xSym, ySym) sqrt((xSym-x2(4)).^2+(ySym-y2(4)).^2)-sqrt((xSym-x1(4)).^2+(
 f5 =  @(xSym, ySym) sqrt((xSym-x2(5)).^2+(ySym-y2(5)).^2)-sqrt((xSym-x1(5)).^2+(ySym-y1(5)).^2) - c*tau(5);
 f6 =  @(xSym, ySym) sqrt((xSym-x2(6)).^2+(ySym-y2(6)).^2)-sqrt((xSym-x1(6)).^2+(ySym-y1(6)).^2) - c*tau(6);
 
-fimplicit(f1,[0 10 -1 9])
-fimplicit(f2,[0 10 -1 9])
-fimplicit(f3,[0 10 -1 9])
-fimplicit(f4,[0 10 -1 9])
-fimplicit(f5,[0 10 -1 9])
-fimplicit(f6,[0 10 -1 9])
+interval = [-1 12 -1 11];
+fimplicit(f1, interval)
+fimplicit(f2, interval)
+fimplicit(f3, interval)
+fimplicit(f4, interval)
+fimplicit(f5, interval)
+fimplicit(f6, interval)
 
 legend('Récepteurs','Estimation','True pos')
 
