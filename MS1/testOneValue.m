@@ -5,7 +5,7 @@ importfile('Data_Measured.mat')
 global c;
 c = 299792458;
 
-testedValue = 150;
+testedValue = 90;
 
 global x1;
 x1 = [xReceivers(1,1), xReceivers(1,1), xReceivers(1,1), xReceivers(1,2), xReceivers(1,2),xReceivers(1,3)];
@@ -34,32 +34,35 @@ hold on;
 scatter(xEst,yEst,'*')
 hold on;
 
-text(-8, 12, "MSE = ")
-hold on;
-
 scatter(xTag(1,testedValue),xTag(2,testedValue),'o')
-%legend('Récepteurs','Estimation','True pos')
 
 syms xSym ySym
 x = [xSym, ySym];
-f1 = isolate(sqrt((x(1)-x2(1))^2+(x(1)-y2(2))^2)-sqrt((x(1)-x1(1))^2+(x(2)-y1(1))^2) == c*tau(1), x(2));
-f2 = isolate(sqrt((x(1)-x2(2))^2+(x(2)-y2(2))^2)-sqrt((x(1)-x1(2))^2+(x(2)-y1(2))^2) == c*tau(2), x(2));
-f3 = isolate(sqrt((x(1)-x2(3))^2+(x(2)-y2(3))^2)-sqrt((x(1)-x1(3))^2+(x(2)-y1(3))^2) == c*tau(3), x(2));
-f4 = isolate(sqrt((x(1)-x2(4))^2+(x(2)-y2(4))^2)-sqrt((x(1)-x1(4))^2+(x(2)-y1(4))^2) == c*tau(4), x(2));
-f5 = isolate(sqrt((x(1)-x2(5))^2+(x(2)-y2(5))^2)-sqrt((x(1)-x1(5))^2+(x(2)-y1(5))^2) == c*tau(5), x(2));
-f6 = isolate(sqrt((x(1)-x2(6))^2+(x(2)-y2(6))^2)-sqrt((x(1)-x1(6))^2+(x(2)-y1(6))^2) == c*tau(6), x(2));
-% ezplot(f,[xmin,xmax,ymin,ymax])
-ezplot(f1, [-15,15,-15,15]);
-%ezplot(f2, [-15,15,-15,15]);
-%ezplot(f3, [-15,15,-15,15]);
-%ezplot(f4, [-15,15,-15,15]);
-%ezplot(f5, [-15,15,-15,15]);
-%ezplot(f6, [-15,15,-15,15]);
+f1 =  @(xSym, ySym) sqrt((xSym-x2(1)).^2+(ySym-y2(1)).^2)-sqrt((xSym-x1(1)).^2+(ySym-y1(1)).^2) - c*tau(1);
+f2 =  @(xSym, ySym) sqrt((xSym-x2(2)).^2+(ySym-y2(2)).^2)-sqrt((xSym-x1(2)).^2+(ySym-y1(2)).^2) - c*tau(2);
+f3 =  @(xSym, ySym) sqrt((xSym-x2(3)).^2+(ySym-y2(3)).^2)-sqrt((xSym-x1(3)).^2+(ySym-y1(3)).^2) - c*tau(3);
+f4 =  @(xSym, ySym) sqrt((xSym-x2(4)).^2+(ySym-y2(4)).^2)-sqrt((xSym-x1(4)).^2+(ySym-y1(4)).^2) - c*tau(4);
+f5 =  @(xSym, ySym) sqrt((xSym-x2(5)).^2+(ySym-y2(5)).^2)-sqrt((xSym-x1(5)).^2+(ySym-y1(5)).^2) - c*tau(5);
+f6 =  @(xSym, ySym) sqrt((xSym-x2(6)).^2+(ySym-y2(6)).^2)-sqrt((xSym-x1(6)).^2+(ySym-y1(6)).^2) - c*tau(6);
+
+%f1 = isolate(sqrt((x(1)-x2(1))^2+(x(2)-y2(1))^2)-sqrt((x(1)-x1(1))^2+(x(2)-y1(1))^2) == c*tau(1), x(2));
+%f2 = isolate(sqrt((x(1)-x2(2))^2+(x(2)-y2(2))^2)-sqrt((x(1)-x1(2))^2+(x(2)-y1(2))^2) == c*tau(2), x(2));
+%f3 = isolate(sqrt((x(1)-x2(3))^2+(x(2)-y2(3))^2)-sqrt((x(1)-x1(3))^2+(x(2)-y1(3))^2) == c*tau(3), x(2));
+%f4 = isolate(sqrt((x(1)-x2(4))^2+(x(2)-y2(4))^2)-sqrt((x(1)-x1(4))^2+(x(2)-y1(4))^2) == c*tau(4), x(2));
+%f5 = isolate(sqrt((x(1)-x2(5))^2+(x(2)-y2(5))^2)-sqrt((x(1)-x1(5))^2+(x(2)-y1(5))^2) == c*tau(5), x(2));
+%f6 = isolate(sqrt((x(1)-x2(6))^2+(x(2)-y2(6))^2)-sqrt((x(1)-x1(6))^2+(x(2)-y1(6))^2) == c*tau(6), x(2));
+
+
+fimplicit(f1,[0 10 -1 9])
+fimplicit(f2,[0 10 -1 9])
+fimplicit(f3,[0 10 -1 9])
+fimplicit(f4,[0 10 -1 9])
+fimplicit(f5,[0 10 -1 9])
+fimplicit(f6,[0 10 -1 9])
 
 
 
-
-
+legend('Récepteurs','Estimation','True pos')
 
 
 function F = func(x)
