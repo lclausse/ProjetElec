@@ -2,7 +2,7 @@ clear
 clc
 %importfile('Data_Measured.mat')
 %importfile('Data_Synthetic.mat')
-importfile('Data_Lab1_1.mat')
+importfile('Data_Lab1_2.mat')
 
 
 global lightSpeed;
@@ -18,7 +18,7 @@ lightSpeed = 299792458;
 %Due to the way the variable are updated on the main computer during the
 %lab, some variable have to be flipped.
 %We consider that the time of the first localisation run on the PC (==a(end)) is t=0.
-a = Time.PcAtRoutineRun(1:end); %Timestamps of the PC clock when it enters its localisation routine
+a = Time.PcAtRoutineRun(1:end);    %Timestamps of the PC clock when it enters its localisation routine
 c = Time.PcAtTsFrame; c = flip(c); %Timestamps of the PC clock when it receive a measurement from the total station
 d = Time.TsAtTsFrame; d = flip(d); %Timestamps of the TotalStation clock when it takes the measurement
 PcAtRoutineRunVect = seconds(a-a(end));
@@ -41,13 +41,11 @@ x2 = [xReceivers(1,2), xReceivers(1,3), xReceivers(1,4), xReceivers(1,3), xRecei
 global y2;
 y2 = [xReceivers(2,2), xReceivers(2,3), xReceivers(2,4), xReceivers(2,3), xReceivers(2,4),xReceivers(2,4)];
 
-%{
-scatter(xReceivers(1,:),xReceivers(2,:),'filled');
-str = [" R1"," R2"," R3"," R4"];
-hold on;
-scatter(xCalTag(1,1),xCalTag(2,1), 'filled');
-%}
+%scatter3(xTotalStationSync(1,:), xTotalStationSync(2,:), xTotalStationSync(3,:), 'filled');
 
+%plot(RawSignalRx1(1,:)-RawSignalRx1(2,:))
+
+%{
 xEst = zeros(1,length(TDOA));
 yEst = zeros(1,length(TDOA));
 resnorm = zeros(1,length(TDOA));
@@ -61,23 +59,25 @@ for i = 1:length(TDOA)
     xEst(i) = temp(1);
     yEst(i) = temp(2);
 end
+%}
 
+%l = xTag(1,:);
+%err = immse(xEst,l);
 
-l = xTag(1,:);
-err = immse(xEst,l);
 % ---- PLOT ----
-scatter(xReceivers(1,:),xReceivers(2,:),'filled')
+scatter(xReceivers(1,:),xReceivers(2,:),'filled') % Recepteurs
 str = [" R1"," R2"," R3"," R4"];
-text(xReceivers(1,:),xReceivers(2,:), str)
+text(xReceivers(1,:),xReceivers(2,:), str)      
 hold on;
-scatter(xCalTag(1,1),xCalTag(2,1), 'filled');
+scatter(xCalTag(1,1),xCalTag(2,1), 'filled'); % Balise de calibrage
+text(xCalTag(1,1),xCalTag(2,1), ' Ref')
 hold on;
-scatter(xEst,yEst,'*')
+%scatter(xEst,yEst,'*')                          % Estimation de la position
 hold on;
-text(-8, 12, "MSE = " + err)
+%text(-8, 12, "MSE = " + err)
 hold on;
-scatter(xTag(1,:),xTag(2,:),'k','.')
-legend('Récepteurs','Estimation','True pos')
+scatter(xTotalStationSync(1,:),xTotalStationSync(2,:),'k','.') % Position au laser
+legend('Récepteurs','Référence','True pos')
 
 
 function F = func(x)
