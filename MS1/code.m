@@ -2,9 +2,14 @@ clear
 clc
 importfile('Data_Measured.mat')
 %importfile('Data_Synthetic.mat')
+%importfile('Data_Lab1_1.mat')
+
 
 global c;
 c = 299792458;
+
+% xTag : Positions au laser
+% xReceivers : Positions des balises au laser
 
 global x1;
 x1 = [xReceivers(1,1), xReceivers(1,1), xReceivers(1,1), xReceivers(1,2), xReceivers(1,2),xReceivers(1,3)];
