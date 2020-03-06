@@ -1,8 +1,8 @@
 clear
 clc
-importfile('Data_Measured.mat')
+%importfile('Data_Measured.mat')
 %importfile('Data_Synthetic.mat')
-%importfile('Data_Lab1_1.mat')
+importfile('Data_Lab1_1.mat')
 
 
 global c;
@@ -19,6 +19,13 @@ global x2;
 x2 = [xReceivers(1,2), xReceivers(1,3), xReceivers(1,4), xReceivers(1,3), xReceivers(1,4),xReceivers(1,4)];
 global y2;
 y2 = [xReceivers(2,2), xReceivers(2,3), xReceivers(2,4), xReceivers(2,3), xReceivers(2,4),xReceivers(2,4)];
+
+%{
+scatter(xReceivers(1,:),xReceivers(2,:),'filled');
+str = [" R1"," R2"," R3"," R4"];
+hold on;
+scatter(xCalTag(1,1),xCalTag(2,1), 'filled');
+%}
 
 xEst = zeros(1,length(TDOA));
 yEst = zeros(1,length(TDOA));
@@ -41,6 +48,8 @@ err = immse(xEst,l);
 scatter(xReceivers(1,:),xReceivers(2,:),'filled')
 str = [" R1"," R2"," R3"," R4"];
 text(xReceivers(1,:),xReceivers(2,:), str)
+hold on;
+scatter(xCalTag(1,1),xCalTag(2,1), 'filled');
 hold on;
 scatter(xEst,yEst,'*')
 hold on;
