@@ -5,11 +5,32 @@ clc
 importfile('Data_Lab1_1.mat')
 
 
-global c;
-c = 299792458;
+global lightSpeed;
+lightSpeed = 299792458;
 
-% xTag : Positions au laser
-% xReceivers : Positions des balises au laser
+% ------------------------------------------------------------------------
+% ---------------------------- CODE DES PROFS ----------------------------
+% ------------------------------------------------------------------------
+%The piece of code below Interpolate the Total Station measurements at the
+%time the UWB signals are acquired.
+%The input variable (Time and xTotalStation) are supposed to be loaded from
+%the files saved during the lab
+%Due to the way the variable are updated on the main computer during the
+%lab, some variable have to be flipped.
+%We consider that the time of the first localisation run on the PC (==a(end)) is t=0.
+a = Time.PcAtRoutineRun(1:end); %Timestamps of the PC clock when it enters its localisation routine
+c = Time.PcAtTsFrame; c = flip(c); %Timestamps of the PC clock when it receive a measurement from the total station
+d = Time.TsAtTsFrame; d = flip(d); %Timestamps of the TotalStation clock when it takes the measurement
+PcAtRoutineRunVect = seconds(a-a(end));
+PcAtTsFrameVect = seconds(c-a(end)); 
+TsAtTsFrameVect = seconds(d-a(end));
+ClockOffset = seconds(d(end)-c(end)); %Offset between the PC clock and the Total Station clock
+TsAtTsFrameVect = TsAtTsFrameVect - ClockOffset; 
+xTsFlip = flip(xTotalStation,2);
+xTotalStationSync = spline(TsAtTsFrameVect,xTsFlip,PcAtRoutineRunVect+0.2035); %The constant delay 0.2035s is based on error minimisation on a large data set.
+% ------------------------------------------------------------------------
+% --------------------------------- FIN ----------------------------------
+% ------------------------------------------------------------------------
 
 global x1;
 x1 = [xReceivers(1,1), xReceivers(1,1), xReceivers(1,1), xReceivers(1,2), xReceivers(1,2),xReceivers(1,3)];
@@ -60,13 +81,14 @@ legend('Récepteurs','Estimation','True pos')
 
 
 function F = func(x)
-    global x1;
-    global x2;
-    global y1;
-    global y2;
-    global c;
-    global tau;
-    F = [sqrt((x(1)-x2(1))^2+(x(2)-y2(1))^2)-sqrt((x(1)-x1(1))^2+(x(2)-y1(1))^2)-c*tau(1), sqrt((x(1)-x2(2))^2+(x(2)-y2(2))^2)-sqrt((x(1)-x1(2))^2+(x(2)-y1(2))^2)-c*tau(2), sqrt((x(1)-x2(3))^2+(x(2)-y2(3))^2)-sqrt((x(1)-x1(3))^2+(x(2)-y1(3))^2)-c*tau(3), sqrt((x(1)-x2(4))^2+(x(2)-y2(4))^2)-sqrt((x(1)-x1(4))^2+(x(2)-y1(4))^2)-c*tau(4), sqrt((x(1)-x2(5))^2+(x(2)-y2(5))^2)-sqrt((x(1)-x1(5))^2+(x(2)-y1(5))^2)-c*tau(5), sqrt((x(1)-x2(6))^2+(x(2)-y2(6))^2)-sqrt((x(1)-x1(6))^2+(x(2)-y1(6))^2)-c*tau(6)];
+    global x1 x2 y1 y2 lightSpeed tau;
+    f1 = sqrt((x(1)-x2(1))^2+(x(2)-y2(1))^2)-sqrt((x(1)-x1(1))^2+(x(2)-y1(1))^2)-lightSpeed*tau(1);
+    f2 = sqrt((x(1)-x2(2))^2+(x(2)-y2(2))^2)-sqrt((x(1)-x1(2))^2+(x(2)-y1(2))^2)-lightSpeed*tau(2);
+    f3 = sqrt((x(1)-x2(3))^2+(x(2)-y2(3))^2)-sqrt((x(1)-x1(3))^2+(x(2)-y1(3))^2)-lightSpeed*tau(3);
+    f4 = sqrt((x(1)-x2(4))^2+(x(2)-y2(4))^2)-sqrt((x(1)-x1(4))^2+(x(2)-y1(4))^2)-lightSpeed*tau(4);
+    f5 = sqrt((x(1)-x2(5))^2+(x(2)-y2(5))^2)-sqrt((x(1)-x1(5))^2+(x(2)-y1(5))^2)-lightSpeed*tau(5);
+    f6 = sqrt((x(1)-x2(6))^2+(x(2)-y2(6))^2)-sqrt((x(1)-x1(6))^2+(x(2)-y1(6))^2)-lightSpeed*tau(6);
+    F = [f1, f2, f3, f4, f5, f6];
 end
 
 
