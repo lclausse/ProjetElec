@@ -7,6 +7,7 @@ clc;
 
 data = reshape([txt_theta txt_phi txt_amplitude txt_phase],[37,72,4]);
 % Array 2D -> max et min dans les deux directions
+%plot(data(:,:,4));
 phase_max = max(max(data(:,:,4)));
 phase_min = min(min(data(:,:,4)));
 
@@ -35,5 +36,6 @@ data(:,end,2) = 360;
 C = data(:,:,4);
 surf(x,y,z,C,'FaceAlpha',0.7)
 colorbar
+caxis([240 300])
 % ---------------------------------------------
 
