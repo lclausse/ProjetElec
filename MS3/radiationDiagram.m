@@ -31,11 +31,12 @@ data(:,end,2) = 360;
 % --------- Plot du mesh en spherique ---------
 % X : phi, Y : theta
 [x,y,z] = sph2cart(deg2rad(data(:,:,2)), deg2rad(data(:,:,1)), data(:,:,3));
+%plot(data(:,:,4))
 %mesh(x,y,z)
 %plot3(x,y,z)
 C = data(:,:,4);
-surf(x,y,z,C,'FaceAlpha',0.7)
+surf(x,y,z,C,'FaceAlpha',1)
 colorbar
-caxis([240 300])
+%caxis([240 300])
 % ---------------------------------------------
 
