@@ -8,7 +8,6 @@ c = 299792458;
 
 
 
-
 function importfile(fileToRead1)
     %  Imports data from the specified file
     newData1 = load('-mat', fileToRead1);
