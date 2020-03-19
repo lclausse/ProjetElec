@@ -3,10 +3,6 @@ clc
 
 importfile('Data.mat')
 
-global c;
-c = 299792458;
-
-
 
 function importfile(fileToRead1)
     %  Imports data from the specified file
