@@ -7,10 +7,8 @@ clc;
 
 data = reshape([txt_theta txt_phi txt_amplitude txt_phase],[37,72,4]);
 % Array 2D -> max et min dans les deux directions
-%plot(data(:,:,4));
 phase_max = max(max(data(:,:,4)));
 phase_min = min(min(data(:,:,4)));
-
 
 % ------------ Raccord du diagramma -----------
 % Pour faire le raccord, on ajoute une colonne en 360 degres
@@ -31,12 +29,72 @@ data(:,end,2) = 360;
 % --------- Plot du mesh en spherique ---------
 % X : phi, Y : theta
 [x,y,z] = sph2cart(deg2rad(data(:,:,2)), deg2rad(data(:,:,1)), data(:,:,3));
-%plot(data(:,:,4))
-%mesh(x,y,z)
-%plot3(x,y,z)
+
+% Uncomment for amplitude
+%{ 
+subplot(1,2,1);
 C = data(:,:,4);
+caxis([240 300])
 surf(x,y,z,C,'FaceAlpha',1)
 colorbar
-%caxis([240 300])
+
+subplot(1,2,2);
+plot3(x,y,z)
+%}
+
+
+% Uncomment for phase
+%{
+subplot(1,2,1);
+mesh(data(:,:,2), data(:,:,1), data(:,:,4));
+
+subplot(1,2,2);
+plot(data(:,:,4))
+%}
 % ---------------------------------------------
+
+%Positions d'un récepteur et d'un transmetteur:
+% [xt, yt, zt]
+pos_t = [1, 1, 1];
+pos_r = [2, 2.5, 3];
+
+scatter3(pos_t(1), pos_t(2), pos_t(3), 'filled', 'r');
+hold on;
+scatter3(pos_r(1), pos_r(2), pos_r(3), 'filled');
+hold on;
+
+
+%{
+plot3([pos_t(1) pos_r(1)], [pos_t(2) pos_r(2)], [pos_t(3) pos_r(3)]);
+hold on;
+
+% Repère
+l = 1;
+plot3([pos_t(1) pos_t(1)+l], [pos_t(2) pos_t(2)], [pos_t(3) pos_t(3)],'r');
+text(pos_t(1)+ 1.1*l, pos_t(2), pos_t(3), 'x')
+hold on;
+plot3([pos_t(1) pos_t(1)], [pos_t(2) pos_t(2)+l], [pos_t(3) pos_t(3)],'r');
+text(pos_t(1), pos_t(2)+ 1.1*l, pos_t(3), 'y')
+hold on;
+plot3([pos_t(1) pos_t(1)], [pos_t(2) pos_t(2)], [pos_t(3) pos_t(3)+l],'r');
+text(pos_t(1), pos_t(2), pos_t(3)+ 1.1*l, 'z')
+hold on;
+
+plot3([pos_t(1) pos_r(1)], [pos_t(2) pos_r(2)], [pos_r(3) pos_r(3)],'k--');
+hold on;
+plot3([pos_t(1) pos_t(1)], [pos_t(2) pos_t(2)], [pos_t(3) pos_r(3)],'k--');
+hold on;
+plot3([pos_t(1) pos_r(1)], [pos_t(2) pos_r(2)], [pos_t(3) pos_t(3)],'k--');
+hold on;
+plot3([pos_r(1) pos_r(1)], [pos_r(2) pos_r(2)], [pos_t(3) pos_r(3)],'k--');
+hold on;
+plot3([pos_t(1) pos_r(1)], [pos_t(2) pos_t(2)], [pos_t(3) pos_t(3)],'k--');
+hold on;
+plot3([pos_r(1) pos_r(1)], [pos_t(2) pos_r(2)], [pos_t(3) pos_t(3)],'k--');
+
+retrait = 0.2;
+text(pos_t(1) - retrait, pos_t(2) - retrait, pos_t(3) - 2*retrait, '(x_t, y_t, z_t)')
+text(pos_r(1) + 0.05, pos_r(2) + 0.05, pos_r(3) + retrait, '(x_r, y_r, z_r)')
+%}
+axis([0.5 2.5 0.5 3.5 0 3.5]);
 
