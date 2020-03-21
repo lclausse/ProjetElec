@@ -20,6 +20,14 @@ data(:,end,2) = 360;
 % ---------------------------------------------
 
 
+[amp, ph] = interpolate(13, 9)
+
+
+
+
+
+
+
 % --------- Plot du mesh en cartesien ---------
 % X : phi (horizontal), Y : theta (vertical)
 %mesh(data(:,:,2), data(:,:,1), data(:,:,3));
@@ -31,7 +39,7 @@ data(:,end,2) = 360;
 [x,y,z] = sph2cart(deg2rad(data(:,:,2)), deg2rad(data(:,:,1)), data(:,:,3));
 
 % Uncomment for amplitude
-%{ 
+%{
 subplot(1,2,1);
 C = data(:,:,4);
 caxis([240 300])
@@ -55,6 +63,7 @@ plot(data(:,:,4))
 
 %Positions d'un récepteur et d'un transmetteur:
 % [xt, yt, zt]
+%{
 pos_t = [1, 1, 1];
 pos_r = [2, 2.5, 3];
 
@@ -62,7 +71,8 @@ scatter3(pos_t(1), pos_t(2), pos_t(3), 'filled', 'r');
 hold on;
 scatter3(pos_r(1), pos_r(2), pos_r(3), 'filled');
 hold on;
-
+axis([0.5 2.5 0.5 3.5 0 3.5]);
+%}
 
 %{
 plot3([pos_t(1) pos_r(1)], [pos_t(2) pos_r(2)], [pos_t(3) pos_r(3)]);
@@ -96,5 +106,20 @@ retrait = 0.2;
 text(pos_t(1) - retrait, pos_t(2) - retrait, pos_t(3) - 2*retrait, '(x_t, y_t, z_t)')
 text(pos_r(1) + 0.05, pos_r(2) + 0.05, pos_r(3) + retrait, '(x_r, y_r, z_r)')
 %}
-axis([0.5 2.5 0.5 3.5 0 3.5]);
+
+% Retourne l'amplitude et la phase après interpolation
+function [amp, pha] = interpolate(theRand, phiRand)
+    index_theRand = (theRand / 5) + 1;
+    index_phiRand = (phiRand / 5) + 1;
+    
+    index_thei1 = floor(index_theRand);
+    index_thei2 = ceil(index_theRand);
+    index_phii1 = floor(index_phiRand);
+    index_phii2 = ceil(index_phiRand);
+    
+    
+    
+    amp = 0;
+    pha = 0;
+end
 
