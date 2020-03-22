@@ -5,6 +5,7 @@ clc;
 % theta : 0 -> 180 par pas de 5 -> 37 elements
 % phi : 0 -> 355 par pas de 5   -> 72 elements
 
+global data;
 data = reshape([txt_theta txt_phi txt_amplitude txt_phase],[37,72,4]);
 % Array 2D -> max et min dans les deux directions
 phase_max = max(max(data(:,:,4)));
@@ -20,7 +21,7 @@ data(:,end,2) = 360;
 % ---------------------------------------------
 
 
-[amp, ph] = interpolate(13, 9)
+[amp, ph] = interpolate(13, 9);
 
 
 
@@ -109,6 +110,7 @@ text(pos_r(1) + 0.05, pos_r(2) + 0.05, pos_r(3) + retrait, '(x_r, y_r, z_r)')
 
 % Retourne l'amplitude et la phase après interpolation
 function [amp, pha] = interpolate(theRand, phiRand)
+    global data;
     index_theRand = (theRand / 5) + 1;
     index_phiRand = (phiRand / 5) + 1;
     
@@ -117,9 +119,59 @@ function [amp, pha] = interpolate(theRand, phiRand)
     index_phii1 = floor(index_phiRand);
     index_phii2 = ceil(index_phiRand);
     
+    data1 = data(index_thei1, index_phii1,:);
+    data2 = data(index_thei2, index_phii1,:);
+    data3 = data(index_thei2, index_phii2,:);
+    data4 = data(index_thei1, index_phii2,:);
+    
+    t1 = data1(1); t2 = data3(1);
+    p1 = data1(2); p2 = data3(2);
+    
+    % Système linéaire de type A*x = B
+    % -----------------------------------
+    %{
+    A = [t1 p1 t1*p1 1;
+         t1 p2 t1*p2 1;
+         t2 p1 t2*p1 1;
+         t2 p2 t2*p2 1];
+    B = [data1(3);
+         data2(3);
+         data3(3);
+         data4(3)];
+    coeff = A\B;    % Comme la matrice inverse, mais en plus efficace
+    [thetaPlot,phiPlot] = meshgrid(t1:0.05:t2, p1:0.05:p2);
+    ampPlot = coeff(1).*thetaPlot + coeff(2).*phiPlot + coeff(3).*thetaPlot.*phiPlot + coeff(4);
+    %mesh(thetaPlot,phiPlot,ampPlot)
+    %hold on;
+    %}
     
     
-    amp = 0;
-    pha = 0;
+    % http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
+    thetaAverage1Amp = ((p2-phiRand)/(p2-p1))*data1(3) + ((phiRand-p1)/(p2-p1))*data4(3);
+    thetaAverage2Amp = ((p2-phiRand)/(p2-p1))*data2(3) + ((phiRand-p1)/(p2-p1))*data3(3);
+    amp = ((t2-theRand)/(t2-t1))*thetaAverage1Amp + ((theRand-t1)/(t2-t1))*thetaAverage2Amp;
+    
+    thetaAverage1Phase = ((p2-phiRand)/(p2-p1))*data1(4) + ((phiRand-p1)/(p2-p1))*data4(4);
+    thetaAverage2Phase = ((p2-phiRand)/(p2-p1))*data2(4) + ((phiRand-p1)/(p2-p1))*data3(4);
+    pha = ((t2-theRand)/(t2-t1))*thetaAverage1Phase + ((theRand-t1)/(t2-t1))*thetaAverage2Phase;
+    
+
+    % ------------------- Plot -------------------
+    scatter3(data1(1), data1(2), data1(3), 'filled', 'r');
+    hold on;
+    scatter3(data2(1), data2(2), data2(3), 'filled', 'r');
+    hold on;
+    scatter3(data3(1), data3(2), data3(3), 'filled', 'r');
+    hold on;
+    scatter3(data4(1), data4(2), data4(3), 'filled', 'r');
+    hold on;
+    scatter3(t1, phiRand, thetaAverage1Amp);
+    hold on;
+    scatter3(t2, phiRand, thetaAverage2Amp);
+    hold on;
+    scatter3(theRand, phiRand, amp);
+    hold on;
+    axis([data1(1)-1 data3(1)+1 data1(2)-1 data3(2)+1 0 20]);
+
 end
 
