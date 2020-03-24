@@ -21,61 +21,50 @@ data(:,end,2) = 360;
 % ---------------------------------------------
 
 
-[amp, ph] = interpolate(13, 9);
-
-
-
-
-
-
-
-% --------- Plot du mesh en cartesien ---------
-% X : phi (horizontal), Y : theta (vertical)
-%mesh(data(:,:,2), data(:,:,1), data(:,:,3));
-% ---------------------------------------------
-
-
-% --------- Plot du mesh en spherique ---------
-% X : phi, Y : theta
-[x,y,z] = sph2cart(deg2rad(data(:,:,2)), deg2rad(data(:,:,1)), data(:,:,3));
-
-% Uncomment for amplitude
-%{
-subplot(1,2,1);
-C = data(:,:,4);
-caxis([240 300])
-surf(x,y,z,C,'FaceAlpha',1)
-colorbar
-
-subplot(1,2,2);
-plot3(x,y,z)
-%}
-
-
-% Uncomment for phase
-%{
-subplot(1,2,1);
-mesh(data(:,:,2), data(:,:,1), data(:,:,4));
-
-subplot(1,2,2);
-plot(data(:,:,4))
-%}
-% ---------------------------------------------
-
 %Positions d'un récepteur et d'un transmetteur:
 % [xt, yt, zt]
-%{
+
 pos_t = [1, 1, 1];
 pos_r = [2, 2.5, 3];
 
+% Puissance transmise :
+P_t = 10e-12; % [joules]
+
+% Impédance du vide
+eta = 376.730;
+% fréquence = 4 [GHz]
+f = 4e9;
+% Vitesse de la lumière
+c = 299792458;
+lambda = c/f;
+
+% Distance entre les antennes :
+R = sqrt((pos_r(1)-pos_t(1))^2 + (pos_r(2)-pos_t(2))^2 + (pos_r(3)-pos_t(3))^2);
+
+theta_t = rad2deg(atan(sqrt((pos_r(1)-pos_t(1))^2 + (pos_r(2)-pos_t(2))^2)/(pos_r(3)-pos_t(3))));
+theta_r = 180 - theta_t;
+
+phi_t = rad2deg(atan((pos_r(2)-pos_t(2))/(pos_r(1)-pos_t(1))));
+phi_r = 180 + phi_t;
+
+[amp_t, phase_t] = interpolate(theta_t, phi_t)
+[amp_r, phase_r] = interpolate(theta_r, phi_r)
+
+% Directivités
+D_t = ( (4*pi*R^2*amp_t^2) / (2*eta*P_t) )
+D_r = ( (4*pi*R^2*amp_r^2) / (2*eta*P_t) )
+
+% Puissance reçue
+P_r = P_t * (D_t/(4*pi*R^2)) * (D_r*lambda^2/(4*pi))
+
+% ------------ Plot des deux antennes -----------
+%{
 scatter3(pos_t(1), pos_t(2), pos_t(3), 'filled', 'r');
 hold on;
 scatter3(pos_r(1), pos_r(2), pos_r(3), 'filled');
 hold on;
 axis([0.5 2.5 0.5 3.5 0 3.5]);
-%}
 
-%{
 plot3([pos_t(1) pos_r(1)], [pos_t(2) pos_r(2)], [pos_t(3) pos_r(3)]);
 hold on;
 
@@ -107,6 +96,43 @@ retrait = 0.2;
 text(pos_t(1) - retrait, pos_t(2) - retrait, pos_t(3) - 2*retrait, '(x_t, y_t, z_t)')
 text(pos_r(1) + 0.05, pos_r(2) + 0.05, pos_r(3) + retrait, '(x_r, y_r, z_r)')
 %}
+
+
+% --------- Plot du mesh en cartesien ---------
+% X : phi (horizontal), Y : theta (vertical)
+%mesh(data(:,:,2), data(:,:,1), data(:,:,3));
+% ---------------------------------------------
+
+
+% --------- Plot du mesh en spherique ---------
+%{
+r = data(:,:,3);
+elevation = pi/2 - deg2rad(data(:,:,1)); % !!!! Voir definition de elevation
+azimuth = deg2rad(data(:,:,2));
+x = r .* cos(elevation) .* cos(azimuth);
+y = r .* cos(elevation) .* sin(azimuth);
+z = r .* sin(elevation);
+%}
+% Uncomment for amplitude
+%{
+subplot(1,2,1);
+C = data(:,:,4);
+caxis([240 300])
+surf(x,y,z,C,'FaceAlpha',1)
+colorbar
+subplot(1,2,2);
+plot3(x,y,z)
+%}
+
+% Uncomment for phase
+%{
+subplot(1,2,1);
+mesh(data(:,:,2), data(:,:,1), data(:,:,4));
+
+subplot(1,2,2);
+plot(data(:,:,4))
+%}
+% ---------------------------------------------
 
 % Retourne l'amplitude et la phase après interpolation
 function [amp, pha] = interpolate(theRand, phiRand)
@@ -157,6 +183,7 @@ function [amp, pha] = interpolate(theRand, phiRand)
     
 
     % ------------------- Plot -------------------
+    %{
     scatter3(data1(1), data1(2), data1(3), 'filled', 'r');
     hold on;
     scatter3(data2(1), data2(2), data2(3), 'filled', 'r');
@@ -165,13 +192,19 @@ function [amp, pha] = interpolate(theRand, phiRand)
     hold on;
     scatter3(data4(1), data4(2), data4(3), 'filled', 'r');
     hold on;
-    scatter3(t1, phiRand, thetaAverage1Amp);
+    scatter3(t1, phiRand, thetaAverage1Amp, 'filled', 'g');
     hold on;
-    scatter3(t2, phiRand, thetaAverage2Amp);
+    scatter3(t2, phiRand, thetaAverage2Amp, 'filled', 'g');
     hold on;
-    scatter3(theRand, phiRand, amp);
+    scatter3(theRand, phiRand, amp, 'filled', 'b');
     hold on;
+    plot3([data2(1) data3(1)], [data2(2) data3(2)], [data2(3) data3(3)], 'r');
+    hold on;
+    plot3([data4(1) data1(1)], [data4(2) data1(2)], [data4(3) data1(3)], 'r');
+    hold on;
+    plot3([t1 t2], [phiRand phiRand], [thetaAverage1Amp thetaAverage2Amp], 'g');
     axis([data1(1)-1 data3(1)+1 data1(2)-1 data3(2)+1 0 20]);
+    %}
 
 end
 
