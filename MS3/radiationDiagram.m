@@ -47,8 +47,8 @@ theta_r = 180 - theta_t;
 phi_t = rad2deg(atan((pos_r(2)-pos_t(2))/(pos_r(1)-pos_t(1))));
 phi_r = 180 + phi_t;
 
-[amp_t, phase_t] = interpolate(theta_t, phi_t)
-[amp_r, phase_r] = interpolate(theta_r, phi_r)
+[amp_t, phase_t] = interpolate(theta_t, phi_t);
+[amp_r, phase_r] = interpolate(theta_r, phi_r);
 
 % Directivités
 D_t = ( (4*pi*R^2*amp_t^2) / (2*eta*P_t) )
