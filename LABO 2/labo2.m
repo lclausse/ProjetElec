@@ -8,12 +8,6 @@ plot(Reference);
 subplot(2, 2, 2);
 plot(Corr7);
 
-subplot(2, 2, 3);
-REF = fourier(Reference);
-plot(REF);
-subplot(2, 2, 4);
-CORR7 = fourier(Corr7);
-plot(CORR7);
 
 
 
