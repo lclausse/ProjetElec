@@ -4,46 +4,49 @@ clc;
 load("data_labo_reflexion.mat");
 
 subplot(2, 2, 1);
-plot(abs(Corr7));
-decalagedebase = 102250;
-decalsupp = 115;
-attenuation = 0.6666;
-test1 = miaouss(decalagedebase,decalsupp,attenuation,Reference);
+plot((Corr7));
+decalsupp = 85;
+attenuation = 0.66;
+
+% reflet1 = bulbizarre(Reference,115,attenuation);
+% reflet2 = bulbizarre(Reference,115,attenuation);
+% reflet3 = bulbizarre(Reference,115,attenuation);
+test1 = racaillou(113,attenuation,Reference);
 subplot(2,2,2);
-plot(abs(test1));
-test2 = tortank(decalagedebase+1100,attenuation,Reference);
+plot(real(test1));
+test2 = racaillou(115,attenuation,Reference);
 subplot(2,2,3);
-plot(abs(test2));
-test3 = tortank(decalagedebase+1200,attenuation,Reference);
+plot(real(test2));
+test3 = racaillou(118,attenuation,Reference); %118 ca donne bien
 subplot(2,2,4);
-plot(abs(test3));
+plot(real(test3));
 
 
 
 
 
 
-function [jeanphilippe] = tortank(sampledecal,attenuation,Ref)
-    decalage = zeros(1,sampledecal);
-    refcopie = [decalage,Ref]*attenuation;
-    nouvRef = [Ref,decalage];
-    FFTref = fourier(nouvRef);
-    FFTcopie = fourier(refcopie);
-    jeanphilippe = fourier_inverse(conj(FFTref).*FFTcopie);
-end
-
-
-function [vec] = miaouss(decalbase,decalreflet,attenuation,Ref)
-    decalage = zeros(1,decalbase);
+function [vec] = racaillou(decalreflet,attenuation,Ref)
+    L = length(Ref);
+    removeEnd = L - decalreflet+1;
+    RefRaccourci = Ref;
+    RefRaccourci(removeEnd:end) = [];
     decalageReflet = zeros(1,decalreflet);
-    nouvRef = [decalage,Ref,decalageReflet];
-    refCopie = [decalage,decalageReflet,Ref]*attenuation;
-    FFTref = fourier(nouvRef);
-    FFTcopie = fourier(refCopie);
-    vec = fourier_inverse(conj(FFTref).*FFTcopie);
-
-
+    reflet = [decalageReflet,RefRaccourci]*attenuation + Ref;
+    FFTref = fftshift(fft(Ref));
+    FFTcopie = fftshift(fft(reflet));
+    vec = fftshift(ifft(conj(FFTref).*FFTcopie));
 end
+
+% function [reflet] = bulbizarre(Ref,decalreflet,attenuation)
+%     L = length(Ref);
+%     removeEnd = L - decalreflet+1;
+%     RefRaccourci = Ref;
+%     RefRaccourci(removeEnd:end) = [];
+%     decalageReflet = zeros(1,decalreflet);
+%     reflet = [decalageReflet,RefRaccourci]*attenuation;
+% 
+% end
 
 
 function [vec] = fourier(r)
