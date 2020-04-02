@@ -38,7 +38,7 @@ Z = 75;
 f = 4e9;
 % Vitesse de la lumière
 c = 299792458;
-lambda = c/f
+lambda = c/f;
 
 % Distance entre les antennes :
 R = sqrt((pos_r(1)-pos_t(1))^2 + (pos_r(2)-pos_t(2))^2 + (pos_r(3)-pos_t(3))^2);
