@@ -31,9 +31,8 @@ T = solve( (n(1)*(n(1)* t +P1(1)) + n(2)*(n(2)* t +P1(2)) + n(3)*(n(3)* t +P1(3)
 
 PM =[P1(1)+n(1)*T, P1(2) + n(2)*T, P1(3) + n(3)*T];
 P2 = [2*PM(1)-P1(1),2*PM(2)-P1(2),2*PM(3)-P1(3)];
-P1=P2;
 I=[0 0 0];
-u = P1-P0;
+u = P2-P0;
 w = P0 - V0;
 D = dot(n,u);
 N = -dot(n,w);
@@ -54,4 +53,6 @@ if (sI < 0 || sI > 1)
     check= 3;          %The intersection point  lies outside the segment, so there is no intersection
 else
     check=1;
+end
+
 end
