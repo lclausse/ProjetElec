@@ -28,7 +28,7 @@ pos_t = [1, 1, 1];
 pos_r = [2, 2.5, 3];
 
 % Puissance transmise :
-P_t = 1/37200
+P_t = 1/37200;
 
 % Impédance du vide
 eta = 376.730;
@@ -38,7 +38,7 @@ Z = 75;
 f = 4e9;
 % Vitesse de la lumière
 c = 299792458;
-lambda = c/f;
+lambda = c/f
 
 % Distance entre les antennes :
 R = sqrt((pos_r(1)-pos_t(1))^2 + (pos_r(2)-pos_t(2))^2 + (pos_r(3)-pos_t(3))^2);
@@ -52,9 +52,10 @@ phi_r = 180 + phi_t;
 [amp_t, phase_t] = interpolate(theta_t, phi_t);
 [amp_r, phase_r] = interpolate(theta_r, phi_r);
 
+% Facteur multiplicateur 
+facteur = (amp_t^2 * amp_r^2 * lambda^2) / (eta^2 * Z^2 * R^2);
 % Puissance reçue
-P_r = (P_t * amp_t^2 * amp_r^2 * lambda^2) / (eta^2 * Z^2 * R^2)
-
+P_r = P_t * facteur;
 % ------------ Plot des deux antennes -----------
 %{
 scatter3(pos_t(1), pos_t(2), pos_t(3), 'filled', 'r');
