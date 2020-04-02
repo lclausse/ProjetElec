@@ -3,10 +3,10 @@ clc;
 
 load("data_labo_reflexion.mat");
 
-subplot(2, 2, 1);
+%subplot(2, 2, 1);
 plot(Reference);
-subplot(2, 2, 2);
-plot(Corr7);
+%subplot(2, 2, 2);
+%plot(Corr7);
 
 
 
