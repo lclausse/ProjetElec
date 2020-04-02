@@ -1,6 +1,5 @@
 function [I,check]=Point_de_reflexion(n,V0,P0,P1)
-%plane_line_intersect computes the intersection of a plane and a segment(or
-%a straight line)
+
 % Inputs: 
 %       n: normal vector of the Plane 
 %       V0: any point that belongs to the Plane 
