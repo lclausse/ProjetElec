@@ -4,7 +4,7 @@ clc;
 load("data_labo_reflexion.mat");
 
 subplot(2, 2, 1);
-plot((Corr7));
+plot(abs(Corr7));
 decalsupp = 85;
 attenuation = 0.66;
 
@@ -13,13 +13,13 @@ attenuation = 0.66;
 % reflet3 = bulbizarre(Reference,115,attenuation);
 test1 = racaillou(113,attenuation,Reference);
 subplot(2,2,2);
-plot(real(test1));
+plot(abs(test1));
 test2 = racaillou(115,attenuation,Reference);
 subplot(2,2,3);
-plot(real(test2));
+plot(abs(test2));
 test3 = racaillou(118,attenuation,Reference); %118 ca donne bien
 subplot(2,2,4);
-plot(real(test3));
+plot(abs(test3));
 
 
 
