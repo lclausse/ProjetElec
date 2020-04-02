@@ -1,4 +1,4 @@
-function [I,check]=Point_de_reflexion(n,V0,P0,P1)
+function [I,theta, check]=Point_de_reflexion(n,V0,P0,P1)
 
 % Inputs: 
 %       n: normal vector of the Plane 
@@ -54,5 +54,8 @@ if (sI < 0 || sI > 1)
 else
     check=1;
 end
+v = P0-I;
+
+theta = atan2d(norm(cross(n,v)),dot(n,v));
 
 end
