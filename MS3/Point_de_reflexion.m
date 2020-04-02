@@ -7,8 +7,10 @@ function [I,theta, distanceReflexion, check]=Point_de_reflexion(n,V0,P0,P1)
 %       P1: position of the receiver
 %
 %Outputs:
-%      I    is the reflexion  point 
-%     Check is an indicator:
+%       I    is the reflexion  point 
+%		theta is the angle between P0-I and n
+%		distanceReflexion is the total distance between P0-I-P1
+%     	Check is an indicator:
 %      0 => disjoint (no intersection)
 %      1 => the plane intersects P0P1 in the unique point I
 %      2 => the segment lies in the plane
