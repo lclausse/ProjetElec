@@ -1,4 +1,4 @@
-function [I,theta, check]=Point_de_reflexion(n,V0,P0,P1)
+function [I,theta, distanceReflexion, check]=Point_de_reflexion(n,V0,P0,P1)
 
 % Inputs: 
 %       n: normal vector of the Plane 
@@ -57,5 +57,6 @@ end
 v = P0-I;
 
 theta = atan2d(norm(cross(n,v)),dot(n,v));
-
+distanceReflexion = norm(P0-I)+norm(P1-I);
+[I,theta, distanceReflexion, check];
 end
