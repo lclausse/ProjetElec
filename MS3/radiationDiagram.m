@@ -28,10 +28,12 @@ pos_t = [1, 1, 1];
 pos_r = [2, 2.5, 3];
 
 % Puissance transmise :
-P_t = 10e-12; % [joules]
+P_t = 1/37200
 
 % Impédance du vide
 eta = 376.730;
+% Impédance de l'antenne
+Z = 75;
 % fréquence = 4 [GHz]
 f = 4e9;
 % Vitesse de la lumière
@@ -50,12 +52,8 @@ phi_r = 180 + phi_t;
 [amp_t, phase_t] = interpolate(theta_t, phi_t);
 [amp_r, phase_r] = interpolate(theta_r, phi_r);
 
-% Directivités
-D_t = ( (4*pi*R^2*amp_t^2) / (2*eta*P_t) )
-D_r = ( (4*pi*R^2*amp_r^2) / (2*eta*P_t) )
-
 % Puissance reçue
-P_r = P_t * (D_t/(4*pi*R^2)) * (D_r*lambda^2/(4*pi))
+P_r = (P_t * amp_t^2 * amp_r^2 * lambda^2) / (eta^2 * Z^2 * R^2)
 
 % ------------ Plot des deux antennes -----------
 %{
