@@ -26,7 +26,7 @@ function [I,check]=Point_de_reflexion(n,V0,P0,P1)
 
 
 d = [-V0(1) -V0(2) -V0(3)];
-T= solve( n(1)*(n(1)*t+P1(1)) + n(2)*(n(2)*t+P1(2)) + n(3)*(n(3)*t+p1(3)) + d,t);
+T= solve( n(1)*(n(1)*t+P1(1)) + n(2)*(n(2)*t+P1(2)) + n(3)*(n(3)*t+p1(3)) + d == 0,t);
 PM =[P1(1)+n(1)*T, P1(2) + n(2)*T, P1(3) + n(3)*T];
 P2 = [2*PM(1)-P1(1),2*PM(2)-P1(2),2*PM(3)-P1(3)];
 P1=P2;
