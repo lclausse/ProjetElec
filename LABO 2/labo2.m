@@ -4,7 +4,6 @@ clc;
 load("data_labo_reflexion.mat");
 
 subplot(2, 2, 1);
-plot(abs(Corr7));
 decalsupp = 85;
 attenuation = 0.66;
 
