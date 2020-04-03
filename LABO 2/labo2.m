@@ -10,14 +10,8 @@ plot(Reference);
 
 
 
-
-
-
 function [vec] = fourier(r)
     L = length(r);
-    R = fft(r);
-    P2 = abs(R/L);
-    P1 = P2(1:L/2+1);
-    P1(2:end-1) = 2*P1(2:end-1);
-    vec = P1;
+    R = fftshift(fft(r));
+    vec = abs(R/L);
 end
