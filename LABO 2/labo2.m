@@ -3,36 +3,41 @@ clc;
 
 load("data_labo_reflexion.mat");
 
-
-%subplot(2, 2, 1);
-%plot(abs(hilbert(Corr7)));
-%decalsupp = 85;
-%attenuation = 0.66;
-
-
-[delay, attenuation] = optimisation(Corr7, Reference);
+[delay, attenuation] = optimisation(Corr7, Reference)
 plotGraphs(Corr7, Reference, delay, attenuation);
 
-%{
-test1 = racaillou(113,attenuation,Reference);
-subplot(2,2,2);
-plot((test1));
-test2 = racaillou(115,attenuation,Reference);
-subplot(2,2,3);
-plot((test2));
-test3 = racaillou(118,attenuation,Reference); %118 ca donne bien
-subplot(2,2,4);
-plot((test3));
-%}
 
 function [delay, attenuation] = optimisation(correlation, ref)
-    delays = 50:100;
-    attenuations = 0.1:0.1:0.9;
+    delays = 70:100;
+    attenuations = 0.6:0.001:0.8;
     errs = zeros(length(delays),length(attenuations));
     
     corr = abs(hilbert(correlation));
-    sizeComparaison = 1000;
+    sizeComparaison = 500;
         
+    %{ 
+    % A vectoriser!!
+    for index_del = 1:length(delays)
+        for index_att = 1:length(attenuations)
+            
+            fictif = racaillou(delays(index_del), attenuations(index_att), ref);
+            % Il faut alligner les deux vecteurs sur la pique.
+            [max_fictif, indice_max_fictif] = max(fictif);
+            [max_corr, indice_max_corr] = max(corr);
+    
+            rapport = max_fictif/max_corr;
+    
+            compare_fictif = fictif(indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);
+            compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1)*rapport; % pour le moment je les match comme ça
+    
+            % La méthode de comparaison de l'efficacité va se baser sur la MSE.
+            % Modèle de régression linéaire à deux variables (delay, attenuation). 
+    
+            errs(index_del,index_att) = immse(compare_fictif, compare_corr);
+        	
+        end
+    end
+    %}
     
     for index_del = 1:length(delays)
         for index_att = 1:length(attenuations)
@@ -69,7 +74,7 @@ end
 function [] = plotGraphs(correlation, ref, delay, attenuation)
     corr = abs(hilbert(correlation));
     fictif = racaillou(delay, attenuation, ref);
-    sizeComparaison = 1000;
+    sizeComparaison = 500;
     
     [max_fictif, indice_max_fictif] = max(fictif);
     [max_corr, indice_max_corr] = max(corr);
