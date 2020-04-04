@@ -3,24 +3,92 @@ clc;
 
 load("data_labo_reflexion.mat");
 
-subplot(2, 2, 1);
-decalsupp = 85;
-attenuation = 0.66;
 
-% reflet1 = bulbizarre(Reference,115,attenuation);
-% reflet2 = bulbizarre(Reference,115,attenuation);
-% reflet3 = bulbizarre(Reference,115,attenuation);
+%subplot(2, 2, 1);
+%plot(abs(hilbert(Corr7)));
+%decalsupp = 85;
+%attenuation = 0.66;
+
+
+[delay, attenuation] = optimisation(Corr7, Reference);
+plotGraphs(Corr7, Reference, delay, attenuation);
+
+%{
 test1 = racaillou(113,attenuation,Reference);
 subplot(2,2,2);
-plot(abs(test1));
+plot((test1));
 test2 = racaillou(115,attenuation,Reference);
 subplot(2,2,3);
-plot(abs(test2));
+plot((test2));
 test3 = racaillou(118,attenuation,Reference); %118 ca donne bien
 subplot(2,2,4);
-plot(abs(test3));
+plot((test3));
+%}
+
+function [delay, attenuation] = optimisation(correlation, ref)
+    delays = 50:100;
+    attenuations = 0.1:0.1:0.9;
+    errs = zeros(length(delays),length(attenuations));
+    
+    corr = abs(hilbert(correlation));
+    sizeComparaison = 1000;
+        
+    
+    for index_del = 1:length(delays)
+        for index_att = 1:length(attenuations)
+            
+            fictif = racaillou(delays(index_del), attenuations(index_att), ref);
+            % Il faut alligner les deux vecteurs sur la pique.
+            [max_fictif, indice_max_fictif] = max(fictif);
+            [max_corr, indice_max_corr] = max(corr);
+    
+            rapport = max_fictif/max_corr;
+    
+            compare_fictif = fictif(indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);
+            compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1)*rapport; % pour le moment je les match comme ça
+    
+            % La méthode de comparaison de l'efficacité va se baser sur la MSE.
+            % Modèle de régression linéaire à deux variables (delay, attenuation). 
+    
+            errs(index_del,index_att) = immse(compare_fictif, compare_corr);
+        	
+        end
+    end
+    
+    
+    %mesh(attenuations, delays, errs);
+    [min_errs, index_min_errs] = min(errs(:));
+    [index_del, index_att] = ind2sub(size(errs), index_min_errs);
+    
+    delay = delays(index_del);
+    attenuation = attenuations(index_att);
+
+end
 
 
+function [] = plotGraphs(correlation, ref, delay, attenuation)
+    corr = abs(hilbert(correlation));
+    fictif = racaillou(delay, attenuation, ref);
+    sizeComparaison = 1000;
+    
+    [max_fictif, indice_max_fictif] = max(fictif);
+    [max_corr, indice_max_corr] = max(corr);
+    
+    rapport = max_fictif/max_corr;
+    
+    compare_fictif = fictif(indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);
+    compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1)*rapport; % pour le moment je les match comme ça
+    
+    figure();
+    subplot(3,1,1);
+    plot(compare_corr);
+    
+    subplot(3,1,2);
+    plot(compare_fictif);
+    
+    subplot(3,1,3);
+    plot(compare_corr - compare_fictif);
+end
 
 
 
@@ -34,30 +102,5 @@ function [vec] = racaillou(decalreflet,attenuation,Ref)
     reflet = [decalageReflet,RefRaccourci]*attenuation + Ref;
     FFTref = fftshift(fft(Ref));
     FFTcopie = fftshift(fft(reflet));
-    vec = fftshift(ifft(conj(FFTref).*FFTcopie));
-end
-
-% function [reflet] = bulbizarre(Ref,decalreflet,attenuation)
-%     L = length(Ref);
-%     removeEnd = L - decalreflet+1;
-%     RefRaccourci = Ref;
-%     RefRaccourci(removeEnd:end) = [];
-%     decalageReflet = zeros(1,decalreflet);
-%     reflet = [decalageReflet,RefRaccourci]*attenuation;
-% 
-% end
-
-
-function [vec] = fourier(r)
-    L = length(r);
-    R = fftshift(fft(r));
-    vec = abs(R/L);
-end
-
- 
-
-function [vec] = fourier_inverse(R)
-    %L = length(R);
-    r = fftshift(ifft(R));
-    vec = abs(r);
+    vec = abs(hilbert(fftshift(ifft(conj(FFTref).*FFTcopie))));
 end
