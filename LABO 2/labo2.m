@@ -1,19 +1,29 @@
 clear;
 clc;
 
+% Pour enlever le message d'erreur.
+MSGID = 'signal:hilbert:Ignore';
+warning('off', MSGID);
+
 load("data_labo_reflexion.mat");
 
+global sizeComparaison;
+sizeComparaison = 1500;
+
 [delay, attenuation] = optimisation(Corr7, Reference)
-plotGraphs(Corr7, Reference, delay, attenuation);
+%delay = 87;
+%attenuation = 0.71;
+plotGraphsRapport(Corr7, Reference, delay, attenuation);
 
 
 function [delay, attenuation] = optimisation(correlation, ref)
+    global sizeComparaison;
     delays = 70:100;
     attenuations = 0.6:0.001:0.8;
     errs = zeros(length(delays),length(attenuations));
     
     corr = abs(hilbert(correlation));
-    sizeComparaison = 500;
+    
         
     %{ 
     % A vectoriser!!
@@ -61,7 +71,7 @@ function [delay, attenuation] = optimisation(correlation, ref)
     end
     
     
-    %mesh(attenuations, delays, errs);
+    mesh(attenuations, delays, errs);
     [min_errs, index_min_errs] = min(errs(:));
     [index_del, index_att] = ind2sub(size(errs), index_min_errs);
     
@@ -74,7 +84,7 @@ end
 function [] = plotGraphs(correlation, ref, delay, attenuation)
     corr = abs(hilbert(correlation));
     fictif = racaillou(delay, attenuation, ref);
-    sizeComparaison = 500;
+    global sizeComparaison;
     
     [max_fictif, indice_max_fictif] = max(fictif);
     [max_corr, indice_max_corr] = max(corr);
@@ -96,6 +106,38 @@ function [] = plotGraphs(correlation, ref, delay, attenuation)
 end
 
 
+function [] = plotGraphsRapport(correlation, ref, delay, attenuation)
+    corr = abs(hilbert(correlation));
+    fictif = racaillou(delay, attenuation, ref);
+    global sizeComparaison;
+    
+    [max_fictif, indice_max_fictif] = max(fictif);
+    [max_corr, indice_max_corr] = max(corr);
+    
+    rapport = max_fictif/max_corr;
+    
+    figure();
+    
+    subplot(3,2,1);
+    plot(fictif);
+    title('Signal fictif')
+    
+    subplot(3,2,2);
+    plot(corr);
+    title('Signal corrélé')
+    
+    compare_fictif = fictif(indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);
+    compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1)*rapport; % pour le moment je les match comme ça
+    
+    subplot(3,2,3);
+    plot(compare_fictif);
+    title('Signal fictif centré')
+    
+    subplot(3,2,4);
+    plot(compare_corr);
+    title('Signal corrélé centré')
+    
+end
 
 
 function [vec] = racaillou(decalreflet,attenuation,Ref)
