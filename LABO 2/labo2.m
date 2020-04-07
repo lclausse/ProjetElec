@@ -14,7 +14,7 @@ global sizeComparaison;
 sizeComparaison = 1500;
 
 
-corr = abs(hilbert(Corr7));
+corr = abs(hilbert(Corr7(1:precision)));
 ref = Reference(1:precision);
 
 REF = fftshift(fft(ref));
@@ -26,50 +26,32 @@ REF = fftshift(fft(ref));
 
 function [delay, attenuation] = findParameters(corr, ref, REF)
     global sizeComparaison;
+    global precision;
+
     delays = 70:100;
     attenuations = 0.6:0.01:0.8;
-    errs = zeros(length(delays),length(attenuations));
-
-    %{
-    for index_del = 1:length(delays)
-        for index_att = 1:length(attenuations)
-
-            fictif = signalSynth(delays(index_del), attenuations(index_att), ref, REF);
-            % Il faut alligner les deux vecteurs sur la pique.
-            [max_fictif, indice_max_fictif] = max(fictif);
-            [max_corr, indice_max_corr] = max(corr);
-
-            rapport = max_fictif/max_corr;
-
-            compare_fictif = fictif(indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);
-            compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1)*rapport;
-
-            % La méthode de comparaison de l'efficacité va se baser sur la MSE.
-            % Modèle de régression linéaire à deux variables (delay, attenuation).
-
-            errs(index_del,index_att) = immse(compare_fictif, compare_corr);
-
-        end
-    end
-    %}
+    D = repmat(delays', length(attenuations), 1);
+    A = repelem(attenuations', length(delays));
     
-    fictif = meshgrid(delays,attenuations);
-    length(fictif)
-    for index_del = 1:length(delays)
-        for index_att = 1:length(attenuations)
-            fictif = signalSynth(delays(index_del), attenuations(index_att), ref, REF);
-        end
-    end
+    errs = zeros(length(delays)*length(attenuations));
+    fictif = signalSynth(D, A, ref, REF);
     
+
     % Il faut alligner les deux vecteurs sur la pique.
-    length(fictif)
-    [max_fictif, indice_max_fictif] = max(fictif);
+    [max_fictif, indice_max_fictif] = max(fictif,[],2);
     [max_corr, indice_max_corr] = max(corr);
 
-    rapport = max_fictif/max_corr;
-
-    compare_fictif = fictif(indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);
-    compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1)*rapport;
+    rapport = max_corr/max_fictif;
+    
+    compare_fictif = fictif(:,indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);%.*rapport';
+    compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1);
+    
+    indice_max_fictif(200)
+    subplot(2,1,1);
+    plot(compare_fictif(200,:))
+    subplot(2,1,2);
+    plot(compare_corr)
+    
 
     % La méthode de comparaison de l'efficacité va se baser sur la MSE.
     % Modèle de régression linéaire à deux variables (delay, attenuation).
@@ -85,6 +67,28 @@ function [delay, attenuation] = findParameters(corr, ref, REF)
     attenuation = attenuations(index_att);
 
 end
+
+
+
+function [vec] = signalSynth(D, A, ref, REF)
+    global precision;
+    indices = length(D);
+    
+    a = zeros(indices, precision);
+    for i = 1:length(D) % dommage que pas vectorisé, mais matrice pas rectangulaire...
+        a(i,D(i):end) = ref(1,1:end-D(i)+1)*A(i);
+    end
+        
+    reflet = repmat(ref, indices,1) + a;    
+    REFLET = fftshift(fft(reflet));
+    vec = abs(hilbert(fftshift(ifft(conj(REF).*REFLET))));
+end
+
+
+
+
+
+
 
 
 function [] = plotGraphs(correlation, ref, delay, attenuation)
@@ -146,28 +150,3 @@ function [] = plotGraphsRapport(correlation, ref, delay, attenuation)
 end
 
 
-
-function [vec] = signalSynth(delay, attenuation, ref, REF)
-
-    reflet = ref + [zeros(1,delay), ref(1:end-delay)*attenuation];
-
-    REFLET = fftshift(fft(reflet));
-    vec = abs(hilbert(fftshift(ifft(conj(REF).*REFLET))));
-end
-
-
-%{
-function [vec] = racaillou(decalreflet,attenuation,Ref)
-    global precision
-    Ref = Ref(1:precision);
-    L = length(Ref);
-    removeEnd = L - decalreflet+1;
-    RefRaccourci = Ref;
-    RefRaccourci(removeEnd:end) = [];
-    decalageReflet = zeros(1,decalreflet);
-    reflet = [decalageReflet,RefRaccourci]*attenuation + Ref;
-    FFTref = fftshift(fft(Ref));
-    FFTcopie = fftshift(fft(reflet));
-    vec = abs(hilbert(fftshift(ifft(conj(FFTref).*FFTcopie))));
-end
-%}
