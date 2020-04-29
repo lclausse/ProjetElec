@@ -3,9 +3,11 @@ close all;
 clc;
 %importfile('Data_Measured.mat')
 %importfile('Data_Synthetic.mat')
-load('Data_Lab1_2.mat')
+load('Data_Lab1_4.mat')
 
-
+% Pour enlever le message d'erreur.
+MSGID = 'MATLAB:declareGlobalBeforeUse';
+warning('off', MSGID);
 global lightSpeed;
 lightSpeed = 299792458;
 
@@ -46,6 +48,14 @@ xRef = xCalTag(1,1);
 global yRef;
 yRef = xCalTag(2,1);
 
+global Fs Fsample tau;
+% Fréquence d'échantillonnage
+Fsample = FsReference;
+% Fréquence du signal
+Fs = FsRawSignal;
+
+global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4;
+
 
 %scatter3(xTotalStationSync(1,:), xTotalStationSync(2,:), xTotalStationSync(3,:), 'filled');
 %plot(RawSignalRx1(1,:)-RawSignalRx1(2,:))
@@ -53,131 +63,17 @@ yRef = xCalTag(2,1);
 % Tableau de 20x81920 -> 20 points avec 81920 samples pour chaque et
 % une fréquence d'échantillonage de FsReference
 
-i = 1;
-% On enlève la moyenne des signaux (partie DC)
-r1 = RawSignalRx1(i,:) - mean(RawSignalRx1(i,:));
-r2 = RawSignalRx2(i,:) - mean(RawSignalRx2(i,:));
-r3 = RawSignalRx3(i,:) - mean(RawSignalRx3(i,:));
-r4 = RawSignalRx4(i,:) - mean(RawSignalRx4(i,:));
 
-% Limites où on coupe les signaux pour isoler partie de la balise et ref
-limiteTemp = 31000;
-limiteLowRef = 36000;
-limiteHighRef = 80000;
+pointsNum = length(RawSignalRx1(:,1));
+xPos = zeros(1,pointsNum);
+yPos = zeros(1,pointsNum);
 
-% On coupe les signaux
-r1Balise = r1(1:limiteTemp);
-r1Ref = r1(limiteLowRef:limiteHighRef);
-r2Balise = r2(1:limiteTemp);
-r2Ref = r2(limiteLowRef:limiteHighRef);
-r3Balise = r3(1:limiteTemp);
-r3Ref = r3(limiteLowRef:limiteHighRef);
-r4Balise = r4(1:limiteTemp);
-r4Ref = r4(limiteLowRef:limiteHighRef);
-
-global Fs Fsample tau;
-% Fréquence d'échantillonnage
-Fsample = FsReference;
-% Fréquence du signal
-Fs = FsRawSignal;
-
-% Les TDOA qu'on devrait trouver. Calcul géométrique.
-TDOARefExact = trueTDOARef();
-
-
-%{
-[fRf,R1Balise] = toRf(r1Balise,Fs);
-[fRf,R2Balise] = toRf(r2Balise,Fs);
-[fRf,R3Balise] = toRf(r3Balise,Fs);
-[fRf,R4Balise] = toRf(r4Balise,Fs);
-
-[fRef,R1Ref] = toRf(r1Ref,Fs);
-[fRef,R2Ref] = toRf(r2Ref,Fs);
-[fRef,R3Ref] = toRf(r3Ref,Fs);
-[fRef,R4Ref] = toRf(r4Ref,Fs);
-
-R1 = abs(fftshift(fft(r1))/length(r1));
-R2 = abs(fftshift(fft(r2))/length(r2));
-R3 = abs(fftshift(fft(r3))/length(r3));
-R4 = abs(fftshift(fft(r4))/length(r4));
-%}
-%{
-figure()
-subplot(2,1,1)
-plot(r1)
-subplot(2,1,2)
-plot(r2)
-
-
-figure();
-subplot(3,2,1);
-plot(r1(1:limiteTemp));
-subplot(3,2,2);
-plot(r2(1:limiteTemp));
-
-subplot(3,2,3);
-plot(fRf,R1Balise);
-subplot(3,2,4);
-plot(fRf,R2Balise);
-
-subplot(3,2,5);
-%}
-%{
-figure();
-subplot(2,1,1);
-corr = fourier_inverse(conj(R1) .* R2);
-plot(corr);
-%}
-
-%xEst = zeros(1,length(TDOA));
-%yEst = zeros(1,length(TDOA));
-%resnorm = zeros(1,length(TDOA));
-
-
-
-
-% Delais des balises
-TDOABal = [findDelay(r1Balise,r2Balise),...
-           findDelay(r1Balise,r3Balise),...
-           findDelay(r1Balise,r4Balise),...
-           findDelay(r3Balise,r2Balise),...
-           findDelay(r4Balise,r2Balise),...
-           findDelay(r3Balise,r4Balise)];
-        
-% Delais de référence
-TDOARef = [findDelay(r1Ref,r2Ref),...
-           findDelay(r1Ref,r3Ref),...
-           findDelay(r1Ref,r4Ref),...
-           findDelay(r3Ref,r2Ref),...
-           findDelay(r4Ref,r2Ref),...
-           findDelay(r3Ref,r4Ref)];
-        
-% Correction des erreurs statiques
-errCorrection = TDOARef - TDOARefExact;
-
-% !!!!!!!!!!!!!!!! IL Y A DU CACA DE SIGNES ICI !!!!!!!!!!!!!!!!
-
-% Delais corrigés des balises
-tau = TDOABal - errCorrection;
-
-x0 = [5,5];
-[temp,resnorm] = lsqnonlin(@func,x0);
-xEst = temp(1);
-yEst = temp(2);
-
-
-figure()
-scatter(1:length(tau),tau,'filled');
-hold on;
-scatter(1:length(TDOARef),TDOARef);
-hold on;
-scatter(1:length(TDOARefExact),TDOARefExact);
-grid on;
-legend('Corrected TDOA','Computed TDOA','Geometric TDOA');
-
+for i = 1:pointsNum
+    [xPos(i),yPos(i)] = findpos(i);
+end
 
 % ---- PLOT ----
-%{
+
 figure();
 scatter(xReceivers(1,:),xReceivers(2,:),'filled') % Recepteurs
 str = [" R1"," R2"," R3"," R4"];
@@ -191,10 +87,117 @@ hold on;
 %text(-8, 12, "MSE = " + err)
 hold on;
 scatter(xTotalStationSync(1,:),xTotalStationSync(2,:),'k','.') % Position au laser
-legend('Récepteurs','Référence','True pos','Location','north')
+hold on;
+scatter(xPos,yPos,'filled') % Position calculée
+legend('Récepteurs','Référence','True pos','Computed pos','Location','north')
 xlabel('position [m]');
 ylabel('position [m]');
 grid on;
+
+
+function [xPos,yPos] = findpos(point)
+    global Fs Fsample tau;
+    global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4;
+    
+    % On enlève la moyenne des signaux (partie DC)
+    r1 = RawSignalRx1(point,:) - mean(RawSignalRx1(point,:));
+    r2 = RawSignalRx2(point,:) - mean(RawSignalRx2(point,:));
+    r3 = RawSignalRx3(point,:) - mean(RawSignalRx3(point,:));
+    r4 = RawSignalRx4(point,:) - mean(RawSignalRx4(point,:));
+
+    % Limites où on coupe les signaux pour isoler partie de la balise et ref
+    limiteTemp = 31000;
+    limiteLowRef = 36000;
+    limiteHighRef = 80000;
+
+    % On coupe les signaux
+    r1Balise = r1(1:limiteTemp);
+    r1Ref = r1(limiteLowRef:limiteHighRef);
+    r2Balise = r2(1:limiteTemp);
+    r2Ref = r2(limiteLowRef:limiteHighRef);
+    r3Balise = r3(1:limiteTemp);
+    r3Ref = r3(limiteLowRef:limiteHighRef);
+    r4Balise = r4(1:limiteTemp);
+    r4Ref = r4(limiteLowRef:limiteHighRef);
+    
+    %{
+    r1Ref = r1(1:limiteTemp);
+    r1Balise = r1(limiteLowRef:limiteHighRef);
+    r2Ref = r2(1:limiteTemp);
+    r2Balise = r2(limiteLowRef:limiteHighRef);
+    r3Ref = r3(1:limiteTemp);
+    r3Balise = r3(limiteLowRef:limiteHighRef);
+    r4Ref = r4(1:limiteTemp);
+    r4Balise = r4(limiteLowRef:limiteHighRef);
+    %}
+
+    % Les TDOA qu'on devrait trouver. Calcul géométrique.
+    TDOARefExact = trueTDOARef();
+
+
+    %{
+    [fRf,R1Balise] = toRf(r1Balise,Fs);
+    [fRf,R2Balise] = toRf(r2Balise,Fs);
+    [fRf,R3Balise] = toRf(r3Balise,Fs);
+    [fRf,R4Balise] = toRf(r4Balise,Fs);
+
+    [fRef,R1Ref] = toRf(r1Ref,Fs);
+    [fRef,R2Ref] = toRf(r2Ref,Fs);
+    [fRef,R3Ref] = toRf(r3Ref,Fs);
+    [fRef,R4Ref] = toRf(r4Ref,Fs);
+
+    R1 = abs(fftshift(fft(r1))/length(r1));
+    R2 = abs(fftshift(fft(r2))/length(r2));
+    R3 = abs(fftshift(fft(r3))/length(r3));
+    R4 = abs(fftshift(fft(r4))/length(r4));
+    %}
+
+    % Delais des balises
+    TDOABal = [findDelay(r1Balise,r2Balise),...
+               findDelay(r1Balise,r3Balise),...
+               findDelay(r1Balise,r4Balise),...
+               findDelay(r3Balise,r2Balise),...
+               findDelay(r4Balise,r2Balise),...
+               findDelay(r3Balise,r4Balise)];
+
+    % Delais de référence
+    TDOARef = [findDelay(r1Ref,r2Ref),...
+               findDelay(r1Ref,r3Ref),...
+               findDelay(r1Ref,r4Ref),...
+               findDelay(r3Ref,r2Ref),...
+               findDelay(r4Ref,r2Ref),...
+               findDelay(r3Ref,r4Ref)];
+
+    % Correction des erreurs statiques
+    errCorrection = TDOARef - TDOARefExact;
+
+    % Delais corrigés des balises
+    tau = TDOABal - errCorrection;
+    %tau = TDOARefExact;
+
+    x0 = [-3,1];
+    [temp,resnorm] = lsqnonlin(@func,x0);
+    xPos = temp(1);
+    yPos = temp(2);
+end
+%{
+figure()
+scatter(1:length(tau),tau,'filled');
+hold on;
+scatter(1:length(TDOABal),TDOABal);
+hold on;
+scatter(1:length(errCorrection),errCorrection);
+grid on;
+legend('Corrected TDOA','Computed TDOA','Correction (TDOA in cables)');
+
+figure()
+scatter(1:length(errCorrection),errCorrection,'filled');
+hold on;
+scatter(1:length(TDOARef),TDOARef);
+hold on;
+scatter(1:length(TDOARefExact),TDOARefExact);
+grid on;
+legend('Correction','Computed TDOA','Geometrics TDOA');
 %}
 
 
@@ -319,22 +322,25 @@ function [vec] = fourier_inverse(R)
 end
 %}
 
-%{
+
 % Passe le signal vers de la radio fréquence.
 % r  : signal temporel à mettre en radio-fréquences
 % Fs : Fréquence du signal
 % Fsample : Fréquence d'échantillonage
-function [f,R] = toRf(r, Fs)
+function [r] = toRf(r, Fs)
     numZeros = 3;
     L_per = numZeros * length(r) - (numZeros-1);
     r_per = zeros(1,L_per);
     r_per(1:numZeros:end) = r;
-    R_per = abs(fftshift(fft(r_per))/L_per);
+    %R_per = abs(fftshift(fft(r_per))/L_per);
     f_per = numZeros*(-L_per/2:L_per/2-1)*(Fs/L_per);
     
-    [val,indexFs] = min(abs(f_per-Fs));
+    R_per = (fft(r_per));
+    
+    [~,indexFs] = min(abs(f_per-Fs));
     R_per(L_per-indexFs:indexFs) = 0;
-    f = f_per;
-    R = R_per;
+    r = real(ifft(R_per));
+    %f = f_per;
+    %R = R_per;
 end
-%}
+
