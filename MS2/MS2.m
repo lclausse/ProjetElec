@@ -13,7 +13,7 @@ if L ~= length(r2)
 end
 
 
-Tsample = 1 / Fs;
+Tsample = 1 / FsReference;
 time = Tsample * (0:L-1);
 
 subplot(4,2,1);
@@ -47,7 +47,7 @@ xlabel('f [Hz]')
 ylabel('|R_2(f)|')
 
 
-L_per = length(r1) + 2 * (length(r1) - 1);
+L_per = 3 * length(r1) - 2;% * (length(r1) - 1);
 
 f_per = 3*(-L_per/2:L_per/2-1)*(Fs/L_per);
 % On ajoute des 0 entre les samples pour périodiser le spectre
@@ -73,6 +73,7 @@ ylabel('|R2_{per}(f)|')
 
 % On va mtn filtrer ce qui est en dessous de Fs = 3.2 GHz
 posFs = cast((2/3) * L_per, 'int32');
+f_per(posFs)
 
 R1_per_filtre = R1_per;
 R1_per_filtre(1:posFs) = 0;
@@ -124,7 +125,6 @@ function [vec] = fourier_inverse(R)
     r = fftshift(ifft(R));
     vec = real(r);
 end
-
 
 
 
