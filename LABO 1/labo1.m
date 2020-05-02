@@ -3,7 +3,7 @@ close all;
 clc;
 %importfile('Data_Measured.mat')
 %importfile('Data_Synthetic.mat')
-load('Data_Lab1_4.mat')
+load('Data_Lab1_2.mat')
 
 % Pour enlever le message d'erreur.
 MSGID = 'MATLAB:declareGlobalBeforeUse';
@@ -52,7 +52,7 @@ global Fs Fsample tau;
 % Fréquence d'échantillonnage
 Fsample = FsReference;
 % Fréquence du signal
-Fs = FsRawSignal;
+Fs = 3*FsRawSignal;
 
 global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4;
 
@@ -153,20 +153,20 @@ function [xPos,yPos] = findpos(point)
     %}
 
     % Delais des balises
-    TDOABal = [findDelay(r1Balise,r2Balise),...
-               findDelay(r1Balise,r3Balise),...
-               findDelay(r1Balise,r4Balise),...
-               findDelay(r3Balise,r2Balise),...
-               findDelay(r4Balise,r2Balise),...
-               findDelay(r3Balise,r4Balise)];
+    TDOABal = [findDelay(r1Balise,r2Balise,Fs),...
+               findDelay(r1Balise,r3Balise,Fs),...
+               findDelay(r1Balise,r4Balise,Fs),...
+               findDelay(r3Balise,r2Balise,Fs),...
+               findDelay(r4Balise,r2Balise,Fs),...
+               findDelay(r3Balise,r4Balise,Fs)];
 
     % Delais de référence
-    TDOARef = [findDelay(r1Ref,r2Ref),...
-               findDelay(r1Ref,r3Ref),...
-               findDelay(r1Ref,r4Ref),...
-               findDelay(r3Ref,r2Ref),...
-               findDelay(r4Ref,r2Ref),...
-               findDelay(r3Ref,r4Ref)];
+    TDOARef = [findDelay(r1Ref,r2Ref,Fs),...
+               findDelay(r1Ref,r3Ref,Fs),...
+               findDelay(r1Ref,r4Ref,Fs),...
+               findDelay(r3Ref,r2Ref,Fs),...
+               findDelay(r4Ref,r2Ref,Fs),...
+               findDelay(r3Ref,r4Ref,Fs)];
 
     % Correction des erreurs statiques
     errCorrection = TDOARef - TDOARefExact;
@@ -176,7 +176,7 @@ function [xPos,yPos] = findpos(point)
     %tau = TDOARefExact;
 
     x0 = [-3,1];
-    [temp,resnorm] = lsqnonlin(@func,x0);
+    [temp,resnorm] = lsqnonlin(@func,x0,[],[],optimset('display','off'));
     xPos = temp(1);
     yPos = temp(2);
 end
@@ -200,12 +200,28 @@ grid on;
 legend('Correction','Computed TDOA','Geometrics TDOA');
 %}
 
+function [res] = upconvert(r)
+    R = upsample(r,3);
+    L = length(R);
+    spectre = fftshift(fft(R));
+    spectre(round(L/6):round(L*5/6))=0;
+    res=ifft(ifftshift(spectre));
+end
 
+function timeDelay = findDelay(r1,r2,Fs)
+    R1 = upconvert(r1);
+    R2 = upconvert(r2);
+    [acor,lag] = xcorr(R1,R2);
+    % Maximum de cette corrélation -> index
+    [~,maxIndex] = max(abs(acor));
+    normax = maxIndex - length(acor)/2;
+    timeDelay = normax/Fs;
+end
 
+%{
 % Fonction qui donne le TDOA entre les deux signaux.
 % Calcule la corrélation puis le TDOA.
-function timeDelay = findDelay(r1,r2)
-    global Fsample;
+function timeDelay = findDelay(r1,r2,Fs)
     
     % On décale les signaux pour centrer la corrélation
     if (length(r1) < length(r2))
@@ -228,7 +244,7 @@ function timeDelay = findDelay(r1,r2)
     % On prend cet index sur l'axe x trouvé avant
     sampleDelay = samplesScale(maxIndex);
     % On calcule un temps avec la fréquence
-    timeDelay = sampleDelay/Fsample;
+    timeDelay = sampleDelay/Fs;
     
     % Plot pour le rapport
     %{
@@ -257,6 +273,7 @@ function timeDelay = findDelay(r1,r2)
     %}
     
 end
+%}
 
 
 % TDOA qu'on devrait avoir pour la balise de référence
