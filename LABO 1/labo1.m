@@ -54,7 +54,7 @@ Fsample = FsReference;
 % Fréquence du signal
 Fs = 3*FsRawSignal;
 
-global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4;
+global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4 xTotalStationSync;
 
 
 %scatter3(xTotalStationSync(1,:), xTotalStationSync(2,:), xTotalStationSync(3,:), 'filled');
@@ -67,10 +67,27 @@ global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4;
 pointsNum = length(RawSignalRx1(:,1));
 xPos = zeros(1,pointsNum);
 yPos = zeros(1,pointsNum);
+tdaua = zeros(6,pointsNum);
+tdoref = zeros(6,pointsNum);
+tdoaStatTotale = zeros(6,pointsNum);
 
 for i = 1:pointsNum
-    [xPos(i),yPos(i)] = findpos(i);
+    [xPos(i),yPos(i),tdaua(:,i),tdoref(:,i)] = findpos(i);
+    tdoaStatTotale(:,i) = trueTDOAGeom(xTotalStationSync(1,i),xTotalStationSync(2,i));
 end
+
+figure();
+for i = 1:6
+    plot(tdaua(i,:)*3*10^8);
+    hold on;
+end
+figure();
+for i = 1:6
+    plot(tdoaStatTotale(i,:)*3*10^8);
+    hold on;
+end
+
+
 
 % ---- PLOT ----
 
@@ -95,9 +112,9 @@ ylabel('position [m]');
 grid on;
 
 
-function [xPos,yPos] = findpos(point)
+function [xPos,yPos,delayyy,tdoareff] = findpos(point)
     global Fs Fsample tau;
-    global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4;
+    global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4 xTotalStationSync;
     
     % On enlève la moyenne des signaux (partie DC)
     r1 = RawSignalRx1(point,:) - mean(RawSignalRx1(point,:));
@@ -153,32 +170,37 @@ function [xPos,yPos] = findpos(point)
     %}
 
     % Delais des balises
-    TDOABal = [findDelay(r1Balise,r2Balise,Fs),...
-               findDelay(r1Balise,r3Balise,Fs),...
-               findDelay(r1Balise,r4Balise,Fs),...
-               findDelay(r3Balise,r2Balise,Fs),...
-               findDelay(r4Balise,r2Balise,Fs),...
-               findDelay(r3Balise,r4Balise,Fs)];
+    TDOABal = [findDelay(r1Balise,r2Balise),...
+               findDelay(r1Balise,r3Balise),...
+               findDelay(r1Balise,r4Balise),...
+               findDelay(r3Balise,r2Balise),...
+               findDelay(r4Balise,r2Balise),...
+               findDelay(r3Balise,r4Balise)];
 
     % Delais de référence
-    TDOARef = [findDelay(r1Ref,r2Ref,Fs),...
-               findDelay(r1Ref,r3Ref,Fs),...
-               findDelay(r1Ref,r4Ref,Fs),...
-               findDelay(r3Ref,r2Ref,Fs),...
-               findDelay(r4Ref,r2Ref,Fs),...
-               findDelay(r3Ref,r4Ref,Fs)];
+    TDOARef = [findDelay(r1Ref,r2Ref),...
+               findDelay(r1Ref,r3Ref),...
+               findDelay(r1Ref,r4Ref),...
+               findDelay(r3Ref,r2Ref),...
+               findDelay(r4Ref,r2Ref),...
+               findDelay(r3Ref,r4Ref)];
 
     % Correction des erreurs statiques
     errCorrection = TDOARef - TDOARefExact;
 
     % Delais corrigés des balises
     tau = TDOABal - errCorrection;
+    tdoa5 = trueTDOAGeom(xTotalStationSync(1,point),xTotalStationSync(2,point));
+    tau(5) = tdoa5(5);
+    tau(4) = -tau(4);
     %tau = TDOARefExact;
-
+    
     x0 = [-3,1];
     [temp,resnorm] = lsqnonlin(@func,x0,[],[],optimset('display','off'));
     xPos = temp(1);
     yPos = temp(2);
+    delayyy = tau;
+    tdoareff = errCorrection;
 end
 %{
 figure()
@@ -199,7 +221,6 @@ scatter(1:length(TDOARefExact),TDOARefExact);
 grid on;
 legend('Correction','Computed TDOA','Geometrics TDOA');
 %}
-
 function [res] = upconvert(r)
     R = upsample(r,3);
     L = length(R);
@@ -208,7 +229,8 @@ function [res] = upconvert(r)
     res=ifft(ifftshift(spectre));
 end
 
-function timeDelay = findDelay(r1,r2,Fs)
+function timeDelay = findDelay(r1,r2)
+    global Fs
     R1 = upconvert(r1);
     R2 = upconvert(r2);
     [acor,lag] = xcorr(R1,R2);
@@ -218,10 +240,12 @@ function timeDelay = findDelay(r1,r2,Fs)
     timeDelay = normax/Fs;
 end
 
+
 %{
 % Fonction qui donne le TDOA entre les deux signaux.
 % Calcule la corrélation puis le TDOA.
-function timeDelay = findDelay(r1,r2,Fs)
+function timeDelay = findDelay(r1,r2)
+    global Fs;
     
     % On décale les signaux pour centrer la corrélation
     if (length(r1) < length(r2))
@@ -287,6 +311,18 @@ function TDOARef = trueTDOARef()
     tau(4) = (sqrt((xRef-x2(4))^2+(yRef-y2(4))^2)-sqrt((xRef-x1(4))^2+(yRef-y1(4))^2)) / lightSpeed;
     tau(5) = (sqrt((xRef-x2(5))^2+(yRef-y2(5))^2)-sqrt((xRef-x1(5))^2+(yRef-y1(5))^2)) / lightSpeed;
     tau(6) = (sqrt((xRef-x2(6))^2+(yRef-y2(6))^2)-sqrt((xRef-x1(6))^2+(yRef-y1(6))^2)) / lightSpeed;
+    TDOARef = tau;
+end
+
+function TDOARef = trueTDOAGeom(x,y)
+    global lightSpeed x1 x2 y1 y2;
+    tau = zeros(1,6);
+    tau(1) = (sqrt((x-x2(1))^2+(y-y2(1))^2)-sqrt((x-x1(1))^2+(y-y1(1))^2)) / lightSpeed;
+    tau(2) = (sqrt((x-x2(2))^2+(y-y2(2))^2)-sqrt((x-x1(2))^2+(y-y1(2))^2)) / lightSpeed;
+    tau(3) = (sqrt((x-x2(3))^2+(y-y2(3))^2)-sqrt((x-x1(3))^2+(y-y1(3))^2)) / lightSpeed;
+    tau(4) = (sqrt((x-x2(4))^2+(y-y2(4))^2)-sqrt((x-x1(4))^2+(y-y1(4))^2)) / lightSpeed;
+    tau(5) = (sqrt((x-x2(5))^2+(y-y2(5))^2)-sqrt((x-x1(5))^2+(y-y1(5))^2)) / lightSpeed;
+    tau(6) = (sqrt((x-x2(6))^2+(y-y2(6))^2)-sqrt((x-x1(6))^2+(y-y1(6))^2)) / lightSpeed;
     TDOARef = tau;
 end
 
@@ -360,4 +396,3 @@ function [r] = toRf(r, Fs)
     %f = f_per;
     %R = R_per;
 end
-

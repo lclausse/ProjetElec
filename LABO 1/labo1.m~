@@ -3,7 +3,7 @@ close all;
 clc;
 %importfile('Data_Measured.mat')
 %importfile('Data_Synthetic.mat')
-load('Data_Lab1_.mat')
+load('Data_Lab1_2.mat')
 
 % Pour enlever le message d'erreur.
 MSGID = 'MATLAB:declareGlobalBeforeUse';
@@ -176,7 +176,7 @@ function [xPos,yPos] = findpos(point)
     %tau = TDOARefExact;
 
     x0 = [-3,1];
-    [temp,resnorm] = lsqnonlin(@func,x0);
+    [temp,resnorm] = lsqnonlin(@func,x0,[],[],optimset('display','off'));
     xPos = temp(1);
     yPos = temp(2);
 end
@@ -199,6 +199,14 @@ scatter(1:length(TDOARefExact),TDOARefExact);
 grid on;
 legend('Correction','Computed TDOA','Geometrics TDOA');
 %}
+
+function [res] = upconvert(r)
+    R = upsample(r,3);
+    L = length(R);
+    spectre = fftshift(fft(R));
+    spectre(round(L/6):round(L*5/6))=0;
+    res=ifft(ifftshift(spectre));
+end
 
 function timeDelay = findDelay(r1,r2,Fs)
     R1 = upconvert(r1);
