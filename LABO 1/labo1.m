@@ -71,7 +71,7 @@ tdaua = zeros(6,pointsNum);
 tdoref = zeros(6,pointsNum);
 tdoaStatTotale = zeros(6,pointsNum);
 
-%{
+
 for i = 1:pointsNum
     [xPos(i),yPos(i),tdaua(:,i),tdoref(:,i)] = findpos(i);
     tdoaStatTotale(:,i) = trueTDOAGeom(xTotalStationSync(1,i),xTotalStationSync(2,i));
@@ -88,9 +88,10 @@ for i = 1:6
     plot(tdoaStatTotale(i,:)*3*10^8);
     hold on;
 end
-%}
+
 
 % ---- PLOT POUR LE RAPPORT ----
+%{
 r1 = RawSignalRx1(1,:) - mean(RawSignalRx1(1,:));
 r2 = RawSignalRx2(1,:) - mean(RawSignalRx2(1,:));
 limiteTemp = 31000;
@@ -100,11 +101,11 @@ r1Balise = r1(1:limiteTemp);
 r1Ref = r1(limiteLowRef:limiteHighRef);
 r2Balise = r2(1:limiteTemp);
 r2Ref = r2(limiteLowRef:limiteHighRef);
-timeDelay = findDelay(r1Balise,r2Balise);
-
+timeDelay = findDelay(r1Balise,r2Balise)
+dist = timeDelay * 3 * 10^8
+%}
 
 % ---- PLOT ----
-%{
 figure();
 scatter(xReceivers(1,:),xReceivers(2,:),'filled') % Recepteurs
 str = [" R1"," R2"," R3"," R4"];
@@ -124,7 +125,7 @@ legend('Récepteurs','Référence','True pos','Computed pos','Location','north')
 xlabel('position [m]');
 ylabel('position [m]');
 grid on;
-%}
+
 
 function [xPos,yPos,delayyy,tdoareff] = findpos(point)
     global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4 xTotalStationSync;
@@ -232,13 +233,15 @@ function timeDelay = findDelay(r1,r2)
     normax = maxIndex - length(acor)/2;
     timeDelay = normax/Fs;
     
-    %
+    %{
     figure()
     L = length(acor);
     xAxe = -L/2:L/2-1;
     plot(xAxe,real(acor));
-    
-    %
+    title('Correlation');
+    xlabel('Sample');
+    grid on;
+    %}
 end
 
 
