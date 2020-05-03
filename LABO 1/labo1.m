@@ -48,7 +48,7 @@ xRef = xCalTag(1,1);
 global yRef;
 yRef = xCalTag(2,1);
 
-global Fs Fsample tau;
+global Fs Fsample FsRawSignal tau;
 % Fréquence d'échantillonnage
 Fsample = FsReference;
 % Fréquence du signal
@@ -71,10 +71,12 @@ tdaua = zeros(6,pointsNum);
 tdoref = zeros(6,pointsNum);
 tdoaStatTotale = zeros(6,pointsNum);
 
+%{
 for i = 1:pointsNum
     [xPos(i),yPos(i),tdaua(:,i),tdoref(:,i)] = findpos(i);
     tdoaStatTotale(:,i) = trueTDOAGeom(xTotalStationSync(1,i),xTotalStationSync(2,i));
 end
+%}
 
 figure();
 for i = 1:6
@@ -87,6 +89,10 @@ for i = 1:6
     hold on;
 end
 
+% ---- PLOT POUR LE RAPPORT ----
+r1 = RawSignalRx1(1,:) - mean(RawSignalRx1(1,:));
+r2 = RawSignalRx2(1,:) - mean(RawSignalRx2(1,:));
+timeDelay = findDelay(r1,r2);
 
 
 % ---- PLOT ----
@@ -174,12 +180,33 @@ function [xPos,yPos,delayyy,tdoareff] = findpos(point)
     tdoareff = errCorrection;
 end
 
-function [res] = upconvert(r)
+function [res] = upconvert(r)   
     R = upsample(r,3);
     L = length(R);
-    spectre = fftshift(fft(R));
-    spectre(round(L/6):round(L*5/6))=0;
-    res=ifft(ifftshift(spectre));
+    spectre = fftshift(fft(R));    
+    spectreFiltre = spectre;
+    spectreFiltre(round(L/6):round(L*5/6)) = 0;
+    res=ifft(ifftshift(spectreFiltre));
+    
+    %{
+    global FsRawSignal;
+    figure()
+    Lr = length(r);
+    fBB = (-Lr/2:Lr/2-1)*(FsRawSignal*10^-9/Lr);
+    plot(fBB, abs(fftshift(fft(r))));
+    title('Spectre en bande de base');
+    xlabel('Fréquence [GHz]');
+    figure()
+    subplot(2,1,1);
+    fRF = (-L/2:L/2-1)*(FsRawSignal*3*10^-9/L);
+    plot(fRF, abs(spectre));
+    title('Spectre en radiofréquences');
+    xlabel('Fréquence [GHz]');
+    subplot(2,1,2);
+    plot(fRF, abs(spectreFiltre));
+    title('Spectre en radiofréquences filtré');
+    xlabel('Fréquence [GHz]');
+    %}
 end
 
 function timeDelay = findDelay(r1,r2)
