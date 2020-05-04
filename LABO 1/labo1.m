@@ -120,13 +120,8 @@ hold on;
 hold on;
 scatter(xTotalStationSync(1,:),xTotalStationSync(2,:),'k','.') % Position au laser
 hold on;
-<<<<<<< HEAD
-scatter(xPos,yPos,'filled') % Position calculée
-legend('Antennes','Référence','Positions laser','Positions estimées','Location','north')
-=======
 scatter(xPos,yPos,'filled') % Position calculÃ©e
 legend('RÃ©cepteurs','RÃ©fÃ©rence','True pos','Computed pos','Location','north')
->>>>>>> 78840ea13bb46da5cb471752a25a4aa362a2c58f
 xlabel('position [m]');
 ylabel('position [m]');
 grid on;
