@@ -3,7 +3,7 @@ close all;
 clc;
 %importfile('Data_Measured.mat')
 %importfile('Data_Synthetic.mat')
-load('Data_Lab1_2.mat')
+load('Data_Lab1_3.mat')
 
 % Pour enlever le message d'erreur.
 MSGID = 'MATLAB:declareGlobalBeforeUse';
@@ -120,8 +120,8 @@ hold on;
 hold on;
 scatter(xTotalStationSync(1,:),xTotalStationSync(2,:),'k','.') % Position au laser
 hold on;
-scatter(xPos,yPos,'filled') % Position calcul√©e
-legend('R√©cepteurs','R√©f√©rence','True pos','Computed pos','Location','north')
+scatter(xPos,yPos,'filled') % Position calculÈe
+legend('Antennes','RÈfÈrence','Positions laser','Positions estimÈes','Location','north')
 xlabel('position [m]');
 ylabel('position [m]');
 grid on;
@@ -160,7 +160,7 @@ function [xPos,yPos,delayyy,tdoareff] = findpos(point)
                findDelay(r1Balise,r3Balise),...
                findDelay(r1Balise,r4Balise),...
                findDelay(r2Balise,r3Balise),...
-               findDelay(r2Balise,r3Balise),...
+               findDelay(r2Balise,r4Balise),...
                findDelay(r3Balise,r4Balise)];
 
     % Delais de r√©f√©rence
