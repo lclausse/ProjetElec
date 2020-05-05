@@ -59,12 +59,6 @@ Fs = 3*FsRawSignal;
 plotGraphs()
 
 
-
-
-
-
-
-
 function [] = plotGraphs()
     global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4 ;
     global xRef yRef xCalTag xReceivers xTotalStationSync tau;
@@ -239,7 +233,9 @@ function [res] = upconvert(r)
     spectre = fftshift(fft(R));    
     spectreFiltre = spectre;
     spectreFiltre(round(L/6):round(L*5/6)) = 0;
-    res = ifft(ifftshift(spectreFiltre));    
+    res = ifft(ifftshift(spectreFiltre));
+    
+    % ---- PLOT UPCONVERT ----
     %{
     global FsRawSignal;
     figure()
@@ -262,16 +258,14 @@ function [res] = upconvert(r)
     plot(real(res))
     title('Signal temporel en radiofréquence');
     xlabel('Sample');
-    %}  
+    %}
+    % ---- END PLOT UPCONVERT ----
 end
 
 
 % IL FAUT LUI DONNER DES SIGNAUX EN RF MTN !!!
 function timeDelay = findDelay(r1_RF,r2_RF)
-    global Fs
-    %r1_RF = upconvert(r1);
-    %r2_RF = upconvert(r2);
-    %[acor,~] = xcorr(r1_RF,r2_RF);    
+    global Fs   
     
     % Correlation fait maison
     e = fft(r1_RF);
@@ -282,6 +276,7 @@ function timeDelay = findDelay(r1_RF,r2_RF)
     normax = maxIndex - length(acor)/2;
     timeDelay = normax/Fs;
     
+    % ---- PLOT DE LA CORRELATION ----
     %{
     figure()
     L = length(acor);
@@ -291,6 +286,7 @@ function timeDelay = findDelay(r1_RF,r2_RF)
     xlabel('Sample');
     grid on;
     %}
+    % ---- END PLOT DE LA CORRELATION ----
 end
 
 
@@ -320,36 +316,3 @@ function F = func(x)
     f6 = sqrt((x(1)-x2(6))^2+(x(2)-y2(6))^2)-sqrt((x(1)-x1(6))^2+(x(2)-y1(6))^2)-lightSpeed*tau(6); %A4-A3
     F = [f1, f2, f3, f4, f5, f6];
 end
-
-
-
-
-
-
-% ------------------------------------------------------------------------
-% --------------------------- bullshit -----------------------------------
-% ------------------------------------------------------------------------
-
- 
-% Passe le signal vers de la radio frequence.
-% r  : signal temporel a mettre en radio-frequences
-% Fs : Frequence du signal
-% Fsample : Frequence d'echantillonage
-%{
-function [r] = toRf(r, Fs)
-    numZeros = 3;
-    L_per = numZeros * length(r) - (numZeros-1);
-    r_per = zeros(1,L_per);
-    r_per(1:numZeros:end) = r;
-    %R_per = abs(fftshift(fft(r_per))/L_per);
-    f_per = numZeros*(-L_per/2:L_per/2-1)*(Fs/L_per);
-    
-    R_per = (fft(r_per));
-    
-    [~,indexFs] = min(abs(f_per-Fs));
-    R_per(L_per-indexFs:indexFs) = 0;
-    r = real(ifft(R_per));
-    %f = f_per;
-    %R = R_per;
-end
-%}
