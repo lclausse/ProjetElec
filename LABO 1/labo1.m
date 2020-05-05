@@ -1,9 +1,8 @@
 clear all;
 close all;
 clc;
-%importfile('Data_Measured.mat')
-%importfile('Data_Synthetic.mat')
-load('Data_Lab1_4.mat')
+
+load('Data_Lab1_2.mat')
 
 % Pour enlever le message d'erreur.
 MSGID = 'MATLAB:declareGlobalBeforeUse';
@@ -12,6 +11,7 @@ global lightSpeed;
 lightSpeed = 299792458;
 
 global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4 xTotalStationSync;
+global xReceivers xCalTag;
 global Fs Fsample FsRawSignal tau;
 
 % ------------------------------------------------------------------------
@@ -51,83 +51,118 @@ xRef = xCalTag(1,1);
 global yRef;
 yRef = xCalTag(2,1);
 
-
 % Frequence d'echantillonnage
 Fsample = FsReference;
-% Frequence du signal
+% Frequence du signal RF
 Fs = 3*FsRawSignal;
 
-pointsNum = length(RawSignalRx1(:,1));
-xPos = zeros(1,pointsNum);
-yPos = zeros(1,pointsNum);
-tdaua = zeros(6,pointsNum);
-tdoref = zeros(6,pointsNum);
-tdoaStatTotale = zeros(6,pointsNum);
+plotGraphs()
 
 
-for i = 1:pointsNum
-    [xPos(i),yPos(i),tdaua(:,i),tdoref(:,i)] = findpos(i);
-    tdoaStatTotale(:,i) = trueTDOAGeom(xTotalStationSync(1,i),xTotalStationSync(2,i));
-end
 
-figure()
-plot(tdaua(3,:));
-hold on;
-plot(tdoaStatTotale(3,:));
-xlabel('Points');
-ylabel('TDOA [s]');
-legend('TDOA calculés','TDOA géométriques');
-title('TDOA en radio-fréquence');
 
-figure();
-for i = 1:6
-    plot(tdaua(i,:)*3*10^8);
+
+
+
+
+function [] = plotGraphs()
+    global RawSignalRx1 RawSignalRx2 RawSignalRx3 RawSignalRx4 ;
+    global xRef yRef xCalTag xReceivers xTotalStationSync tau;
+    
+    pointsNum = length(RawSignalRx1(:,1));
+    xPos = zeros(1,pointsNum);
+    yPos = zeros(1,pointsNum);
+    TDOA = zeros(6,pointsNum);
+    TDOARef = zeros(6,pointsNum);
+    TDOATotal = zeros(6,pointsNum);
+
+    % Calcul de tous les points
+    for i = 1:pointsNum
+        [xPos(i),yPos(i),TDOA(:,i),TDOARef(:,i)] = findpos(i);
+        TDOATotal(:,i) = trueTDOAGeom(xTotalStationSync(1,i),xTotalStationSync(2,i));
+    end
+
+    
+    % ---- PLOT TDOA CALC ET GEOM COMPLET ----
+    %{
+    figure();
+    for i = 1:6
+        plot(TDOA(i,:)*3*10^8,'r-.');
+        hold on;
+        plot(TDOATotal(i,:)*3*10^8,'k');
+        hold on;
+    end
+    grid on;
+    l1 = plot([NaN,NaN],'r-.');
     hold on;
-end
-figure();
-for i = 1:6
-    plot(tdoaStatTotale(i,:)*3*10^8);
+    l2 = plot([NaN,NaN],'k');
+    xlabel('Points');
+    ylabel('TDOA [s]')
+    legend([l1 l2],{'TDOA calculés', 'TDOA géométriques'});
+    title('Comparaison des TDOA');
+    %}
+    % ---- END PLOT TDOA CALC ET GEOM COMPLET ----
+    
+    
+    % ---- PLOT TDOA CALC ET GEOM ----
+    %{
+    figure()
+    plot(TDOA(3,:));
     hold on;
+    plot(TDOATotal(3,:));
+    xlabel('Points');
+    ylabel('TDOA [s]');
+    legend('TDOA calculés','TDOA géométriques');
+    title('TDOA en radio-fréquence');
+    %}
+    % ---- END PLOT TDOA CALC ET GEOM ----
+
+    
+    % ---- PLOT POUR LE RAPPORT ----
+    %{
+    r1 = RawSignalRx1(1,:) - mean(RawSignalRx1(1,:));
+    r2 = RawSignalRx2(1,:) - mean(RawSignalRx2(1,:));
+    limiteTemp = 31000;
+    limiteLowRef = 36000;
+    limiteHighRef = 80000;
+    r1Balise = r1(1:limiteTemp);
+    r1Ref = r1(limiteLowRef:limiteHighRef);
+    r2Balise = r2(1:limiteTemp);
+    r2Ref = r2(limiteLowRef:limiteHighRef);
+    timeDelay = findDelay(r1Balise,r2Balise)
+    dist = timeDelay * 3 * 10^8
+    %}
+    % ---- END PLOT POUR LE RAPPORT ----
+
+
+    % ---- POSITIONS ----
+    %
+    figure();
+    scatter(xReceivers(1,:),xReceivers(2,:),'filled') % Recepteurs
+    str = [" R1"," R2"," R3"," R4"];
+    text(xReceivers(1,:),xReceivers(2,:), str)      
+    hold on;
+    scatter(xCalTag(1,1),xCalTag(2,1), 'filled'); % Balise de calibrage
+    text(xCalTag(1,1),xCalTag(2,1), ' Ref')
+    hold on;
+    err = zeros(1,length(xPos));
+    for i = 1:length(err)
+        err(i) = pdist([xPos(i) yPos(i); xTotalStationSync(1,i) xTotalStationSync(2,i)]);
+    end
+    error = sum(err) / length(err);
+    text(-2, 0.5, "Mean error = " + error)
+    hold on;
+    scatter(xTotalStationSync(1,:),xTotalStationSync(2,:),'k','.') % Position au laser
+    hold on;
+    scatter(xPos,yPos,'filled') % Position calculée
+    legend('Antennes','Référence','Positions laser','Positions estimées','Location','north')
+    xlabel('position [m]');
+    ylabel('position [m]');
+    grid on;
+    %
+    % ---- END POSITIONS ----
+
 end
-
-
-% ---- PLOT POUR LE RAPPORT ----
-%{
-r1 = RawSignalRx1(1,:) - mean(RawSignalRx1(1,:));
-r2 = RawSignalRx2(1,:) - mean(RawSignalRx2(1,:));
-limiteTemp = 31000;
-limiteLowRef = 36000;
-limiteHighRef = 80000;
-r1Balise = r1(1:limiteTemp);
-r1Ref = r1(limiteLowRef:limiteHighRef);
-r2Balise = r2(1:limiteTemp);
-r2Ref = r2(limiteLowRef:limiteHighRef);
-timeDelay = findDelay(r1Balise,r2Balise)
-dist = timeDelay * 3 * 10^8
-%}
-% ---- END PLOT POUR LE RAPPORT ----
-
-
-% ---- PLOT ----
-figure();
-scatter(xReceivers(1,:),xReceivers(2,:),'filled') % Recepteurs
-str = [" R1"," R2"," R3"," R4"];
-text(xReceivers(1,:),xReceivers(2,:), str)      
-hold on;
-scatter(xCalTag(1,1),xCalTag(2,1), 'filled'); % Balise de calibrage
-text(xCalTag(1,1),xCalTag(2,1), ' Ref')
-hold on;
-%scatter(xEst,yEst,'*')                          % Estimation de la position
-hold on;
-%text(-8, 12, "MSE = " + err)
-hold on;
-scatter(xTotalStationSync(1,:),xTotalStationSync(2,:),'k','.') % Position au laser
-hold on;
-scatter(xPos,yPos,'filled') % Position calculée
-legend('Antennes','Référence','Positions laser','Positions estimées','Location','north')
-xlabel('position [m]');
-ylabel('position [m]');
-grid on;
 
 
 function [xPos,yPos,delayyy,tdoareff] = findpos(point)
