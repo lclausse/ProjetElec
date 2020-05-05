@@ -72,6 +72,7 @@ tdoref = zeros(6,pointsNum);
 tdoaStatTotale = zeros(6,pointsNum);
 
 
+
 for i = 1:pointsNum
     [xPos(i),yPos(i),tdaua(:,i),tdoref(:,i)] = findpos(i);
     tdoaStatTotale(:,i) = trueTDOAGeom(xTotalStationSync(1,i),xTotalStationSync(2,i));
