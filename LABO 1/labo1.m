@@ -175,13 +175,32 @@ function [xPos,yPos,delayyy,tdoareff] = findpos(point)
                findDelay(r2_Balise_RF,r4_Balise_RF),...
                findDelay(r3_Balise_RF,r4_Balise_RF)];
 
-    % Delais de référence
+    % Delais de reference
     TDOARef = [findDelay(r1_Ref_RF,r2_Ref_RF),...
                findDelay(r1_Ref_RF,r3_Ref_RF),...
                findDelay(r1_Ref_RF,r4_Ref_RF),...
                findDelay(r2_Ref_RF,r3_Ref_RF),...
                findDelay(r2_Ref_RF,r4_Ref_RF),...
                findDelay(r3_Ref_RF,r4_Ref_RF)];
+    
+    %{
+    % En bande de base
+    TDOABal = [findDelay(r1Balise,r2Balise),...
+               findDelay(r1Balise,r3Balise),...
+               findDelay(r1Balise,r4Balise),...
+               findDelay(r2Balise,r3Balise),...
+               findDelay(r2Balise,r4Balise),...
+               findDelay(r3Balise,r4Balise)];
+
+    % Delais de r�f�rence
+    TDOARef = [findDelay(r1Ref,r2Ref),...
+               findDelay(r1Ref,r3Ref),...
+               findDelay(r1Ref,r4Ref),...
+               findDelay(r2Ref,r3Ref),...
+               findDelay(r2Ref,r4Ref),...
+               findDelay(r3Ref,r4Ref)];
+    %}
+    
 
     % Correction des erreurs statiques
     errCorrection = TDOARef - TDOARefExact;
@@ -294,89 +313,11 @@ end
 % --------------------------- bullshit -----------------------------------
 % ------------------------------------------------------------------------
 
-%{
-figure()
-scatter(1:length(tau),tau,'filled');
-hold on;
-scatter(1:length(TDOABal),TDOABal);
-hold on;
-scatter(1:length(errCorrection),errCorrection);
-grid on;
-legend('Corrected TDOA','Computed TDOA','Correction (TDOA in cables)');
-
-figure()
-scatter(1:length(errCorrection),errCorrection,'filled');
-hold on;
-scatter(1:length(TDOARef),TDOARef);
-hold on;
-scatter(1:length(TDOARefExact),TDOARefExact);
-grid on;
-legend('Correction','Computed TDOA','Geometrics TDOA');
-%}
-
-%{
-% Fonction qui donne le TDOA entre les deux signaux.
-% Calcule la corrélation puis le TDOA.
-function timeDelay = findDelay(r1,r2)
-    global Fs;
-    
-    % On décale les signaux pour centrer la corrélation
-    if (length(r1) < length(r2))
-        c = [ zeros(1,length(r2)-1) r1 zeros(1,length(r2)-length(r1)) ];
-        d = [ r2 zeros(1,length(r2)-1) ];
-    else
-        c = [ zeros(1,length(r1)-1) r1 ];
-        d = [ r2 zeros(1,length(r1)-length(r2)+length(r1)-1) ];
-    end
-    
-    e = fft(c);
-    f = fft(d);
-    g = e.*conj(f);
-    h = ifft(g);
-    
-    % Axe x de la corrélation centrée
-    samplesScale = -length(h)/2:1:length(h)/2 - 1;
-    % Maximum de cette corrélation -> index
-    [~,maxIndex] = max(abs(h));
-    % On prend cet index sur l'axe x trouvé avant
-    sampleDelay = samplesScale(maxIndex);
-    % On calcule un temps avec la fréquence
-    timeDelay = sampleDelay/Fs;
-    
-    % Plot pour le rapport
-    %{
-    figure()
-    subplot(4,1,1);
-    plot(r1);
-    title('Rx1');
-    
-    subplot(4,1,2);
-    plot(r2);
-    title('Rx2');
-    
-    subplot(4,1,3);
-    plot(c);
-    title('Rx1 décalé');
-    
-    subplot(4,1,4);
-    plot(d);
-    title('Rx2 décalé');
-    xlabel('samples');
-    
-    figure()
-    plot(samplesScale,h)
-    title('Correlation');
-    xlabel('samples');
-    %}
-    
-end
-%}
  
-
-% Passe le signal vers de la radio fréquence.
-% r  : signal temporel à mettre en radio-fréquences
-% Fs : Fréquence du signal
-% Fsample : Fréquence d'échantillonage
+% Passe le signal vers de la radio frequence.
+% r  : signal temporel a mettre en radio-frequences
+% Fs : Frequence du signal
+% Fsample : Frequence d'echantillonage
 %{
 function [r] = toRf(r, Fs)
     numZeros = 3;
