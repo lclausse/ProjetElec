@@ -6,151 +6,111 @@ warning('off', MSGID);
 
 load("data_labo_reflexion.mat");
 
-% Donne la plage du signal qui va être analysée
-global precision sizeComparaison;
-precision = 110000;
+global sizeComparaison;
 sizeComparaison = 1500;
 
 global ref REF;
 ref = Reference;
 REF = fftshift(fft(ref));
-[~,ind_max_corr] = max(Corr7);
-corr = abs(hilbert(Corr7(ind_max_corr-sizeComparaison/2:ind_max_corr+sizeComparaison/2-1)));
-[delay, attenuation,compare_fictif,compare_corr] = findParameters(corr);
-delay = 87;
-attenuation = 0.71;
-%plotGraphs(compare_corr, compare_fictif);
-%vec = signalSynth(delay, attenuation);
 
 
+%subplot(2, 2, 1);
+%plot(abs(hilbert(Corr7)));
+%decalsupp = 85;
+%attenuation = 0.66;
 
-function [delay,attenuation,compare_fictif_end,compare_corr_end] = findParameters(corr)
-    %global sizeComparaison;
 
-    delays = 1:100;
-    attenuations = 0.3:0.1:0.8;
+[delay, attenuation] = optimisation(Corr7);
+%plotGraphs(Corr7, Reference, delay, attenuation);
+
+%{
+test1 = signalSynth(113,attenuation,Reference);
+subplot(2,2,2);
+plot((test1));
+test2 = signalSynth(115,attenuation,Reference);
+subplot(2,2,3);
+plot((test2));
+test3 = signalSynth(118,attenuation,Reference); %118 ca donne bien
+subplot(2,2,4);
+plot((test3));
+%}
+
+function [delay, attenuation] = optimisation(correlation)
+    delays = 50:100;
+    attenuations = 0.1:0.1:0.9;
     D = repmat(delays', length(attenuations),1);
     A = repelem(attenuations',length(delays));
-
+    
     errs = zeros(1,length(delays)*length(attenuations));
-    fictif = signalSynth(D, A);
     
-    [max_fict,~] = max(fictif,[],2);
-    [max_corr,~] = max(corr);
-
-    rapport = max_corr/max_fict;
-    compare_fictif = fictif.*rapport';
-    
-    
-    % La méthode de comparaison de l'efficacité va se baser sur la MSE.
+    corr = abs(hilbert(correlation));
+    sizeComparaison = 1500;
+        
     for i = 1:length(errs)
-        errs(i) = immse(compare_fictif(i,:), corr(1,:));
+        
+        fict = signalSynth(D(i), A(i));
+        % Il faut alligner les deux vecteurs sur la pique.
+        [max_fict, i_max_fict] = max(fict);
+        [max_corr, i_max_corr] = max(corr);
+
+        rapport = max_fict/max_corr;
+
+        compare_fictif = fict(i_max_fict-sizeComparaison/2:i_max_fict+sizeComparaison/2-1);
+        compare_corr = corr(i_max_corr-sizeComparaison/2:i_max_corr+sizeComparaison/2-1)*rapport;
+
+        errs(i) = immse(compare_fictif, compare_corr);
     end
-
+    
+    
     %mesh(attenuations, delays, errs);
-    [~, index_min_errs] = min(errs(:));
-    %[index_del, index_att] = ind2sub(size(errs), index_min_errs);
-
+    [~, index_min_errs] = min(errs);
     delay = D(index_min_errs);
     attenuation = A(index_min_errs);
-    compare_fictif_end = compare_fictif(index_min_errs,:);
-    compare_corr_end = corr(1,:);
+    
+    fictifEnd = signalSynth(delay, attenuation);
+    [max_fict, i_max_fict] = max(fictifEnd);
+    [max_corr, i_max_corr] = max(corr);
+    rapport = max_fict/max_corr;
+    figure();
+    plot(fictifEnd(i_max_fict-sizeComparaison/2:i_max_fict+sizeComparaison/2-1));
+    hold on;
+    plot(corr(i_max_corr-sizeComparaison/2:i_max_corr+sizeComparaison/2-1)*rapport);
+
 end
 
 
-% Cree le signal synthetique avec :
-% D : le delay 
-% A : l'attenuation
-function [vec] = signalSynth(D, A)
-    global ref REF sizeComparaison;
-    indices = length(D);
+function [] = plotGraphs(correlation, ref, delay, attenuation)
+    corr = abs(hilbert(correlation));
+    fictif = signalSynth(delay, attenuation);
+    sizeComparaison = 1000;
     
-    a = zeros(indices, length(ref));
-    for i = 1:length(D)
-        a(i,D(i):end) = ref(1,1:end-D(i)+1)*A(i);
-    end
+    [max_fictif, indice_max_fictif] = max(fictif);
+    [max_corr, indice_max_corr] = max(corr);
     
-    %{
-    reflet = repmat(ref, indices,1) + a;
-    REFLET = fftshift(fft(reflet));
-    vec = (ifft(ifftshift(conj(REF).*REFLET)));
-    [~, ind_max] = max(vec,[],2);
-    vec = vec(:,ind_max-sizeComparaison/2:ind_max+sizeComparaison/2-1);
-    %}
-    reflet = repmat(ref, indices,1) + a;
+    rapport = max_fictif/max_corr;
     
-    e = fft(reflet);
-    f = fft(ref);
-    vec = ifftshift(ifft(e.*conj(f)));
+    compare_fictif = fictif(indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);
+    compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1)*rapport; % pour le moment je les match comme ça
     
-    
-    REFLET = fft(reflet,[],1);
-    
-    figure()
-    plot(abs(vec(20,:)));
-
-    
-    %figure()
-    %plot(abs(REF))
-    
-    vec = (ifft(ifftshift(conj(REF).*REFLET)));
-    [~, ind_max] = max(vec,[],2);
-    vec = vec(:,ind_max-sizeComparaison/2:ind_max+sizeComparaison/2-1);
-    
-    %figure()
-    %plot(vec2(20,:))
-    %hold on;
-    %plot(abs(hilbert(vec(20,:))),'--');
-    
-    vec = abs(hilbert(vec));
-end
-
-
-function [] = plotGraphs(compare_corr, compare_fictif)
-
     figure();
     subplot(3,1,1);
     plot(compare_corr);
-
+    
     subplot(3,1,2);
     plot(compare_fictif);
-
+    
     subplot(3,1,3);
     plot(compare_corr - compare_fictif);
 end
 
 
-function [] = plotGraphsRapport(correlation, ref, delay, attenuation)
-    corr = abs(hilbert(correlation));
-    fictif = signalSynth(delay, attenuation, ref);
-    global sizeComparaison;
-
-    [max_fictif, indice_max_fictif] = max(fictif);
-    [max_corr, indice_max_corr] = max(corr);
-
-    rapport = max_fictif/max_corr;
-
-    figure();
-
-    subplot(3,2,1);
-    plot(fictif);
-    title('Signal fictif')
-
-    subplot(3,2,2);
-    plot(corr);
-    title('Signal corrélé')
-
-    compare_fictif = fictif(indice_max_fictif-sizeComparaison/2:indice_max_fictif+sizeComparaison/2-1);
-    compare_corr = corr(indice_max_corr-sizeComparaison/2:indice_max_corr+sizeComparaison/2-1)*rapport; % pour le moment je les match comme ça
-
-    subplot(3,2,3);
-    plot(compare_fictif);
-    title('Signal fictif centré')
-
-    subplot(3,2,4);
-    plot(compare_corr);
-    title('Signal corrélé centré')
-
+function [vec] = signalSynth(D,A)
+    global ref REF;
+    a = zeros(1, length(ref));
+    a(1,D:end) = ref(1,1:end-D+1)*A;
+    reflet = ref + a;
+    REFLET = fftshift(fft(reflet));
+    vec = abs(hilbert(ifftshift(ifft(conj(REF).*REFLET))));
 end
 
 
