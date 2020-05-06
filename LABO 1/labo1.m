@@ -155,7 +155,7 @@ function [] = plotGraphs()
     grid on;
     %
     % ---- END POSITIONS ----
-
+    i = 0
 end
 
 
