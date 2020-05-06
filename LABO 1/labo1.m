@@ -3,7 +3,7 @@ close all;
 clc;
 %importfile('Data_Measured.mat')
 %importfile('Data_Synthetic.mat')
-load('Data_Lab1_3.mat')
+load('Data_Lab1_2.mat')
 
 % Pour enlever le message d'erreur.
 MSGID = 'MATLAB:declareGlobalBeforeUse';
