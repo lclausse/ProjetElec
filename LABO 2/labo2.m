@@ -6,7 +6,7 @@ warning('off', MSGID);
 load("data_labo_reflexion.mat");
 
 global sizeComparaison ref REF;
-sizeComparaison = 1500;
+sizeComparaison = 500;
 ref = Reference;
 REF = fftshift(fft(ref));
 
@@ -24,13 +24,14 @@ plot(fictif);
 hold on;
 plot(corr_compare);
 grid on;
-legend('Signal fictif','Signal réel');
+legend('Signal fictif','Signal corrélé');
+title('Comparaison signal fictif et corrélé');
 % --- END PLOT RAPPORT ---
 
 function [delay, attenuation, fictif] = optimisation(corr)
     global sizeComparaison;
     delays = 50:100;
-    attenuations = 0.1:0.1:0.9;
+    attenuations = 0.1:0.01:0.9;
     D = repmat(delays', length(attenuations),1);
     A = repelem(attenuations',length(delays));
     
