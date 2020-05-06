@@ -52,5 +52,3 @@ function [vec] = signalSynth(D,A)
     REFLET = fftshift(fft(reflet));
     vec = abs(hilbert(ifftshift(ifft(conj(REF).*REFLET))));
 end
-
-
