@@ -2,7 +2,7 @@ clear all;
 close all;
 clc;
 
-load('Data_Lab1_2.mat')
+load('Data_Lab1_3.mat')
 
 % Pour enlever le message d'erreur.
 MSGID = 'MATLAB:declareGlobalBeforeUse';
@@ -144,18 +144,21 @@ function [] = plotGraphs()
         err(i) = pdist([xPos(i) yPos(i); xTotalStationSync(1,i) xTotalStationSync(2,i)]);
     end
     error = sum(err) / length(err);
-    text(-2, 0.5, "Mean error = " + error)
+    text(-2, 0.5, "Mean error = " + error + " [m] ")
     hold on;
-    scatter(xTotalStationSync(1,:),xTotalStationSync(2,:),'k','.') % Position au laser
+    linewidth = 1.75;
+    scatter(xTotalStationSync(1,:),xTotalStationSync(2,:),'kx','LineWidth',linewidth) % Position au laser
     hold on;
-    scatter(xPos,yPos,'filled') % Position calculée
+    color = [245/255 175/255 33/255];
+    scatter(xPos,yPos,'Marker','x','MarkerFaceColor',color,'MarkerEdgeColor',color,'LineWidth',linewidth) % Position calculée
+    hold on;
+    plot(xPos,yPos,'MarkerFaceColor',color,'MarkerEdgeColor',color,'LineWidth',linewidth)
     legend('Antennes','Référence','Positions laser','Positions estimées','Location','north')
     xlabel('position [m]');
     ylabel('position [m]');
     grid on;
     %
     % ---- END POSITIONS ----
-    i = 0
 end
 
 
