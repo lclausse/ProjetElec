@@ -27,10 +27,10 @@ attenuation = 0.71;
 function [delay,attenuation,compare_fictif_end,compare_corr_end] = findParameters(corr)
     %global sizeComparaison;
 
-    delays = 70:100;
-    attenuations = 0.6:0.1:0.8;
-    D = repmat(delays', length(attenuations), 1);
-    A = repelem(attenuations', length(delays));
+    delays = 1:100;
+    attenuations = 0.3:0.1:0.8;
+    D = repmat(delays', length(attenuations),1);
+    A = repelem(attenuations',length(delays));
 
     errs = zeros(1,length(delays)*length(attenuations));
     fictif = signalSynth(D, A);
@@ -70,16 +70,36 @@ function [vec] = signalSynth(D, A)
         a(i,D(i):end) = ref(1,1:end-D(i)+1)*A(i);
     end
     
+    %{
     reflet = repmat(ref, indices,1) + a;
     REFLET = fftshift(fft(reflet));
-    vec = abs(ifft(ifftshift(conj(REF).*REFLET)));
+    vec = (ifft(ifftshift(conj(REF).*REFLET)));
     [~, ind_max] = max(vec,[],2);
-    vec = abs(hilbert(vec));
     vec = vec(:,ind_max-sizeComparaison/2:ind_max+sizeComparaison/2-1);
+    %}
+    reflet = repmat(ref, indices,1) + a;
+    
+    e = fft(reflet);
+    f = fft(ref);
+    vec = ifftshift(ifft(e.*conj(f)));
+    
+    
+    REFLET = fft(reflet,[],1);
     
     figure()
-    plot(vec(20,:))
-    hold on;
+    plot(abs(vec(20,:)));
+
+    
+    %figure()
+    %plot(abs(REF))
+    
+    vec = (ifft(ifftshift(conj(REF).*REFLET)));
+    [~, ind_max] = max(vec,[],2);
+    vec = vec(:,ind_max-sizeComparaison/2:ind_max+sizeComparaison/2-1);
+    
+    %figure()
+    %plot(vec2(20,:))
+    %hold on;
     %plot(abs(hilbert(vec(20,:))),'--');
     
     vec = abs(hilbert(vec));
