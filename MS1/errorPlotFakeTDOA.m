@@ -26,7 +26,7 @@ y2 = [xReceivers(2,2), xReceivers(2,3), xReceivers(2,4), xReceivers(2,3), xRecei
 % On prend l'erreur de lsqnonlin
 % On plot sur le mesh l'erreur
 
-
+TDOARef = trueTDOARef(1,1)
 
 x = -10:1:18;
 y = -10:1:18;
